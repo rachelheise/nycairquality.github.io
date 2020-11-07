@@ -53,15 +53,19 @@ function.
 **The anticipated data sources**
 
   - NYC Air Quality Data
+    (<https://www1.nyc.gov/site/doh/data/data-publications/air-quality-nyc-community-air-survey.page>)
     
       - <https://aqicn.org/data-platform/covid19/> or other alternative
         if necessary
 
   - Government Lockdown Mandates
+    (<https://www.acaps.org/covid-19-government-measures-dataset>)
 
   - Google’s Regional Mobility Data
+    (<https://www.google.com/covid19/mobility/>)
     
       - PDF with visualizations they made
+        (<https://www.gstatic.com/covid19/mobility/2020-10-30_US_New_York_Mobility_Report_en.pdf>)
 
 **The planned analyses / visualizations / coding challenges**
 
