@@ -14,14 +14,14 @@ library(data.table)
 library(tidyverse)
 ```
 
-    ## -- Attaching packages -------------------------------------- tidyverse 1.3.0 --
+    ## -- Attaching packages ---------------------------------------------------------------------------------------------------------- tidyverse 1.3.0 --
 
     ## v ggplot2 3.3.2     v purrr   0.3.4
-    ## v tibble  3.0.3     v dplyr   1.0.1
+    ## v tibble  3.0.3     v dplyr   1.0.2
     ## v tidyr   1.1.2     v stringr 1.4.0
     ## v readr   1.3.1     v forcats 0.5.0
 
-    ## -- Conflicts ----------------------------------------- tidyverse_conflicts() --
+    ## -- Conflicts ------------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
     ## x dplyr::between()   masks data.table::between()
     ## x dplyr::filter()    masks stats::filter()
     ## x dplyr::first()     masks data.table::first()
@@ -30,19 +30,20 @@ library(tidyverse)
     ## x purrr::transpose() masks data.table::transpose()
 
 ``` r
-data = fread("waqi-covid19-airqualitydata-2020.csv")%>%
-  filter(Country == "US")%>%
-  filter(City == "Brooklyn" | City == "Queens" | City == "The Bronx" | City == "Staten Island" | City == "Manhattan")%>%
-  mutate(Borough = City)%>%
-  select(-c(City,Country))%>%
-  pivot_wider(names_from = "Specie", values_from = c("count","min","max","median","variance"))
+air_quality = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
+  filter(Country == "US") %>%
+  filter(City == "Brooklyn" | City == "Queens" | City == "The Bronx" | City == "Staten Island" | City == "Manhattan") %>%
+  mutate(Borough = City) %>%
+  select(-c(City,Country)) %>%
+  pivot_wider(names_from = "Specie", values_from = c("count","min","max","median","variance")) %>% 
+  janitor::clean_names()
 
-fwrite(data,"Just_NYC_Air_Quality_Data.csv")
+fwrite(air_quality,"./data/Just_NYC_Air_Quality_Data.csv")
 ```
 
 ``` r
-data %>% 
-  ggplot(aes(x = Date, y = median_co, color = Borough)) + 
+air_quality %>% 
+  ggplot(aes(x = date, y = median_co, color = borough)) + 
     geom_point(alpha = .2) +
     geom_line(alpha = .75, size = .75) +
       scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
@@ -60,8 +61,8 @@ data %>%
 ![](data_cleaning_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ``` r
-data %>% 
-  ggplot(aes(x = Date, y = median_pm25, color = Borough)) + 
+air_quality %>% 
+  ggplot(aes(x = date, y = median_pm25, color = borough)) + 
     geom_point(alpha = .2) +
     geom_line(alpha = .75, size = .75) +
       scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
@@ -75,15 +76,15 @@ data %>%
 ![](data_cleaning_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
 
 ``` r
-data %>% 
-  ggplot(aes(x = Date, y = median_temperature, color = Borough)) + 
+air_quality %>% 
+  ggplot(aes(x = date, y = median_temperature, color = borough)) + 
     geom_point(alpha = .2) +
     geom_line(alpha = .75, size = .75) +
       scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
   labs(
     title = "Median Temperature over Time for each NYC Borough, 2020",
     x = "Month",
-    y = "Median Temperature (degrees F)",
+    y = "Median Temperature (degrees C)",
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
 ```
 

@@ -15,20 +15,21 @@ output: github_document
 library(data.table)
 library(tidyverse)
 
-data = fread("waqi-covid19-airqualitydata-2020.csv")%>%
-  filter(Country == "US")%>%
-  filter(City == "Brooklyn" | City == "Queens" | City == "The Bronx" | City == "Staten Island" | City == "Manhattan")%>%
-  mutate(Borough = City)%>%
-  select(-c(City,Country))%>%
-  pivot_wider(names_from = "Specie", values_from = c("count","min","max","median","variance"))
+air_quality = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
+  filter(Country == "US") %>%
+  filter(City == "Brooklyn" | City == "Queens" | City == "The Bronx" | City == "Staten Island" | City == "Manhattan") %>%
+  mutate(Borough = City) %>%
+  select(-c(City,Country)) %>%
+  pivot_wider(names_from = "Specie", values_from = c("count","min","max","median","variance")) %>% 
+  janitor::clean_names()
 
-fwrite(data,"Just_NYC_Air_Quality_Data.csv")
+fwrite(air_quality,"./data/Just_NYC_Air_Quality_Data.csv")
 ```
 
 
 ```{r}
-data %>% 
-  ggplot(aes(x = Date, y = median_co, color = Borough)) + 
+air_quality %>% 
+  ggplot(aes(x = date, y = median_co, color = borough)) + 
     geom_point(alpha = .2) +
     geom_line(alpha = .75, size = .75) +
       scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
@@ -38,8 +39,8 @@ data %>%
     y = "Median CO (Parts per Million)",
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
 
-data %>% 
-  ggplot(aes(x = Date, y = median_pm25, color = Borough)) + 
+air_quality %>% 
+  ggplot(aes(x = date, y = median_pm25, color = borough)) + 
     geom_point(alpha = .2) +
     geom_line(alpha = .75, size = .75) +
       scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
@@ -49,14 +50,14 @@ data %>%
     y = "Median Particulate Matter (size < 2.5 micrometeres) Levels (Parts per Millon)",
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
 
-data %>% 
-  ggplot(aes(x = Date, y = median_temperature, color = Borough)) + 
+air_quality %>% 
+  ggplot(aes(x = date, y = median_temperature, color = borough)) + 
     geom_point(alpha = .2) +
     geom_line(alpha = .75, size = .75) +
       scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
   labs(
     title = "Median Temperature over Time for each NYC Borough, 2020",
     x = "Month",
-    y = "Median Temperature (degrees F)",
+    y = "Median Temperature (degrees C)",
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
 ```
