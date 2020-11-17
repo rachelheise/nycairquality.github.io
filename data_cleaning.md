@@ -1,7 +1,7 @@
 Data Cleaning
 ================
 
-# Setup
+## Setup
 
 ## COVID Case Data
 
@@ -41,26 +41,6 @@ nyc_cases %>%
 ## Air Quality Data
 
 ``` r
-library(data.table)
-library(tidyverse)
-```
-
-    ## -- Attaching packages ---------------------------------------------------------------------------------------------------------- tidyverse 1.3.0 --
-
-    ## v ggplot2 3.3.2     v purrr   0.3.4
-    ## v tibble  3.0.3     v dplyr   1.0.2
-    ## v tidyr   1.1.2     v stringr 1.4.0
-    ## v readr   1.3.1     v forcats 0.5.0
-
-    ## -- Conflicts ------------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
-    ## x dplyr::between()   masks data.table::between()
-    ## x dplyr::filter()    masks stats::filter()
-    ## x dplyr::first()     masks data.table::first()
-    ## x dplyr::lag()       masks stats::lag()
-    ## x dplyr::last()      masks data.table::last()
-    ## x purrr::transpose() masks data.table::transpose()
-
-``` r
 air_quality = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
   filter(Country == "US") %>%
   filter(City == "Brooklyn" | City == "Queens" | City == "The Bronx" | City == "Staten Island" | City == "Manhattan") %>%
@@ -89,7 +69,7 @@ air_quality %>%
 
     ## Warning: Removed 4 row(s) containing missing values (geom_path).
 
-![](data_cleaning_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](data_cleaning_files/figure-gfm/plot_aq-1.png)<!-- -->
 
 ``` r
 air_quality %>% 
@@ -104,7 +84,7 @@ air_quality %>%
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
 ```
 
-![](data_cleaning_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+![](data_cleaning_files/figure-gfm/plot_aq-2.png)<!-- -->
 
 ``` r
 air_quality %>% 
@@ -123,4 +103,4 @@ air_quality %>%
 
     ## Warning: Removed 17 row(s) containing missing values (geom_path).
 
-![](data_cleaning_files/figure-gfm/unnamed-chunk-3-3.png)<!-- -->
+![](data_cleaning_files/figure-gfm/plot_aq-3.png)<!-- -->
