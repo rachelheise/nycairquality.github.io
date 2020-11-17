@@ -36,6 +36,6 @@ nyc_cases %>%
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
 ```
 
-![](data_cleaning_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](data_cleaning_files/figure-gfm/clean_cases-1.png)<!-- -->
 
 ## Air Quality Data

@@ -25,7 +25,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 Reading in the data and basic cleaning.
 
-```{r message = FALSE, warning = FALSE}
+```{r import_cases, message = FALSE, warning = FALSE}
 nyc_cases =
   GET("https://data.cityofnewyork.us/resource/rc75-m7u3.csv") %>% # Reading in the data
   content("parsed") %>% 
@@ -40,7 +40,7 @@ nyc_cases =
 
 Trying out a simple plot of cases over time.
 
-```{r}
+```{r clean_cases}
 nyc_cases %>% 
   ggplot(aes(x = date, y = case_count, color = case_count)) + 
     geom_point(alpha = .2) +
