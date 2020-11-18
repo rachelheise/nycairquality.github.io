@@ -1,0 +1,37 @@
+---
+title: "NYC Air Quality Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r dashboard setup, include = FALSE}
+library(flexdashboard)
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
