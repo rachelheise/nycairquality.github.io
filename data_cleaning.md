@@ -1,19 +1,42 @@
 Data Cleaning
 ================
 
+## Setup
+
 ## COVID Case Data
 
-``` r
-# Testing 1 2 3
-```
-
-## Air Quality Data
+Reading in the data and basic cleaning.
 
 ``` r
-library(data.table)
-library(tidyverse)
+nyc_cases =
+  GET("https://data.cityofnewyork.us/resource/rc75-m7u3.csv") %>% # Reading in the data
+  content("parsed") %>% 
+  rename(date = date_of_interest) %>% # Renaming the date variable for simplicity
+  select(date, case_count) %>% # Only retaining date and case count for simplicity
+  mutate(
+    date = as.Date(date, tryFormats = c("%Y-%m-%d")) # as.Date() by default cannot convert POSIXct to date; no data lost
+  )
+## Note: This dataset also contains hospitalized count and death count.
+## I removed those measures for now for simplicity, but we can always decide to retain them later if we think they would be useful.
 ```
 
+Trying out a simple plot of cases over time.
+
+``` r
+nyc_cases %>% 
+  ggplot(aes(x = date, y = case_count, color = case_count)) + 
+    geom_point(alpha = .2) +
+    geom_line(alpha = .75, size = .75) +
+      scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+      scale_y_continuous(breaks = seq(0, 6500, 500)) +
+  labs(
+    title = "COVID-19 New Cases Per Day, NYC, 2020",
+    x = "Month",
+    y = "Case Count (Persons)",
+    caption = "Examining COVID-19 Incidence, P8105 Final Project") 
+```
+
+<<<<<<< HEAD
     ## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
 
     ## ✓ ggplot2 3.3.2     ✓ purrr   0.3.4
@@ -28,6 +51,11 @@ library(tidyverse)
     ## x dplyr::lag()       masks stats::lag()
     ## x dplyr::last()      masks data.table::last()
     ## x purrr::transpose() masks data.table::transpose()
+=======
+![](data_cleaning_files/figure-gfm/clean_cases-1.png)<!-- -->
+
+## Air Quality Data
+>>>>>>> b659014ead335e19d6e62e6a251ce3ee9cacfdfe
 
 ``` r
 air_quality = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
@@ -58,7 +86,7 @@ air_quality %>%
 
     ## Warning: Removed 4 row(s) containing missing values (geom_path).
 
-![](data_cleaning_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](data_cleaning_files/figure-gfm/plot_aq-1.png)<!-- -->
 
 ``` r
 air_quality %>% 
@@ -73,7 +101,7 @@ air_quality %>%
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
 ```
 
-![](data_cleaning_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+![](data_cleaning_files/figure-gfm/plot_aq-2.png)<!-- -->
 
 ``` r
 air_quality %>% 
@@ -92,4 +120,4 @@ air_quality %>%
 
     ## Warning: Removed 17 row(s) containing missing values (geom_path).
 
-![](data_cleaning_files/figure-gfm/unnamed-chunk-3-3.png)<!-- -->
+![](data_cleaning_files/figure-gfm/plot_aq-3.png)<!-- -->
