@@ -4,6 +4,7 @@ output:
   flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
+    source: embed
 runtime: shiny
 ---
 
@@ -11,9 +12,33 @@ runtime: shiny
 library(flexdashboard)
 ```
 
+```{r air quality data, include = FALSE}
+
+```
+
+```{r covid data, include = FALSE}
+
+```
+
+
 Column {.sidebar}
 -----------------------------------------------------------------------
 
+Here we can write some introductory text/explain our project.
+
+```{r inputs}
+ selectInput(
+   "select",
+   label = h3("Air Quality Measure"),
+   choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
+   selected = 1)
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Title for Line Graph
+
 ```{r}
 
 ```
@@ -21,16 +46,7 @@ Column {.sidebar}
 Column {data-width=500}
 -----------------------------------------------------------------------
 
-### Chart A
-
-```{r}
-
-```
-
-Column {data-width=500}
------------------------------------------------------------------------
-
-### Chart B
+### Title for Map
 
 ```{r}
 
