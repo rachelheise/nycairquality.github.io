@@ -1,0 +1,74 @@
+---
+title: "NYC Air Quality Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    source: embed
+runtime: shiny
+---
+
+```{r dashboard setup, include = FALSE}
+library(flexdashboard)
+library(leaflet)
+library(tidyverse)
+```
+
+```{r air quality data, include = FALSE}
+
+```
+
+```{r covid data, include = FALSE}
+
+```
+
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+Here we can write some introductory text/explain our project.
+
+```{r input}
+ dateInput(
+    "date",
+    label = h3("Date input"),
+    value = "2020-02-29", # Default value
+    min = "2020-02-29", # Min value
+    max = "2020-11-17") # Max value
+
+# I put in these dates based on the covid datset, but we can update as needed
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Title for Line Graph
+
+```{r}
+
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Title for Map
+
+```{r}
+boroughs = read_csv("./data/boroughs.csv") %>% 
+   str_remove(the_geom, "")
+   
+   
+   
+   separate(the_geom, into = c("name1", "name2"), sep = ",")
+
+
+
+leaflet() %>%
+   addTiles() %>%
+   setView(-74.00, 40.71, zoom = 12) %>%
+   addProviderTiles("CartoDB.Positron") %>% 
+   addPolygons(lng = c(-73.89680883223774, -73.89693872998792), lat = c(40.79580844515979, 40.79563587285357))
+   
+     
+  addRectangles(lat1 = 40.68, lng1 = -74.06 , lat2 = 40.80, lng2 = -73.94)
+```
