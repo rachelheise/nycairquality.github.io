@@ -66,29 +66,65 @@ nyc_daily_borough_testing =
     names_to = "total_observation_type",
     values_to = "total_observed_value"
   ) %>% 
-  filter(observation_type == c("case_count", "death_count"))
+  filter(observation_type == c("case_count", "case_count_7day_avg"))
+
+#add proof-of-concept covid policy changes to df
+nyc_daily_borough_testing = 
+  nyc_daily_borough_testing %>% 
+  mutate(
+    policy_change = case_when(
+      date == "2020-03-07" ~ "State of Emergency",
+      date == "2020-03-17" ~ "DeBlasio / Cuomo Conflict on Shutdown",
+      date == "2020-03-22" ~ "PAUSE Order",
+      date == "2020-08-08" ~ "Phase 1 Opening",
+      date == "2020-08-17" ~ "Gyms Starting",
+      date == "2020-10-01" ~ "Primary Schools"),
+    dates_vline = date,
+    dates_vline = case_when(
+      date == "2020-03-07" ~ "TRUE",
+      date == "2020-03-17" ~ "TRUE",
+      date == "2020-03-22" ~ "TRUE",
+      date == "2020-08-08" ~ "TRUE",
+      date == "2020-08-17" ~ "TRUE",
+      date == "2020-10-01" ~ "TRUE")
+  )
 ```
 
 ``` r
 nyc_daily_borough_testing %>% 
+  filter(observation_type == c("case_count")) %>% 
   group_by(date, borough, observation_type) %>% 
-  ggplot(aes(x = date, color = observation_type)) + 
-  geom_line(aes(x = date, y = observed_value)) +
+  ggplot(aes(x = date)) + 
+  geom_line(aes(x = date, y = observed_value, color = borough)) +
   geom_smooth(
-    aes(x = date, y = observed_value), 
-        alpha = 1, inherit.aes = F, se = F) +
+    aes(x = date, y = observed_value, color = borough), 
+        alpha = 1, se = F) +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+  coord_cartesian(ylim = c(0,2000)) +
   labs(
-    title = "Observed Values over Time, per Participant",
+    title = "Case Count per NYC Borough over Time",
     x = "Week Number",
     y = "Value",
-    caption = "Testing 1 2 3") 
+    caption = "P8105 Final Project") 
 ```
 
-![](data_cleaning_files/figure-gfm/quickplot%20nycgov%20covid%20dataframe%20import%20and%20cleaning-1.png)<!-- -->
+![](data_cleaning_files/figure-gfm/quickplot%20nycgov%20covid%20case_count-1.png)<!-- -->
 
 ``` r
-### WORK IN PROGRESS
+nyc_daily_borough_testing %>% 
+  filter(observation_type == c("case_count_7day_avg")) %>% 
+  group_by(date, borough, observation_type) %>% 
+  ggplot(aes(x = date, y = observed_value, color = borough)) + 
+  geom_line() +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+  coord_cartesian(ylim = c(0,2000)) +
+  labs(
+    title = "7 Day Case Count Average per NYC Borough over Time",
+    x = "Week Number",
+    y = "Value",
+    caption = "P8105 Final Project") 
 ```
+
+![](data_cleaning_files/figure-gfm/quickplot%20nycgov%20covid%207day_avg%20with%20reference%20lines-1.png)<!-- -->
 
 ## Air Quality Data
