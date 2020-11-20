@@ -14,14 +14,14 @@ library(data.table)
 library(tidyverse)
 ```
 
-    ## -- Attaching packages ---------------------------------------- tidyverse 1.3.0 --
+    ## -- Attaching packages ------------------------------------------------------------------- tidyverse 1.3.0 --
 
     ## v ggplot2 3.3.2     v purrr   0.3.4
-    ## v tibble  3.0.3     v dplyr   1.0.1
+    ## v tibble  3.0.3     v dplyr   1.0.2
     ## v tidyr   1.1.2     v stringr 1.4.0
     ## v readr   1.3.1     v forcats 0.5.0
 
-    ## -- Conflicts ------------------------------------------- tidyverse_conflicts() --
+    ## -- Conflicts ---------------------------------------------------------------------- tidyverse_conflicts() --
     ## x dplyr::between()   masks data.table::between()
     ## x dplyr::filter()    masks stats::filter()
     ## x dplyr::first()     masks data.table::first()
@@ -188,4 +188,16 @@ AQI_combined = AQI_combined%>%
 
 
 fwrite(AQI_combined,"./data/Air_Quality_Data_with_AQI.csv")
+
+AQI_combined %>% 
+  group_by(borough) %>% 
+  ggplot(aes(x = date, y = AQI_Final)) +
+  geom_line() +
+  geom_smooth()
 ```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 336 rows containing non-finite values (stat_smooth).
+
+![](data_cleaning_files/figure-gfm/Air_Quality_Index-1.png)<!-- -->

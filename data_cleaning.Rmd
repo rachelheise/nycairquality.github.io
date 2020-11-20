@@ -157,3 +157,10 @@ AQI_combined = AQI_combined%>%
 
 
 fwrite(AQI_combined,"./data/Air_Quality_Data_with_AQI.csv")
+
+AQI_combined %>% 
+  group_by(borough) %>% 
+  ggplot(aes(x = date, y = AQI_Final)) +
+  geom_line() +
+  geom_smooth()
+```
