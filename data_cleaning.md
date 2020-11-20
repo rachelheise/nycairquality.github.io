@@ -1,6 +1,8 @@
 Data Cleaning
 ================
 
+## Setup
+
 ## COVID Case Data
 
 ``` r
@@ -8,26 +10,6 @@ Data Cleaning
 ```
 
 ## Air Quality Data
-
-``` r
-library(data.table)
-library(tidyverse)
-```
-
-    ## -- Attaching packages ------------------------------------------------------------------- tidyverse 1.3.0 --
-
-    ## v ggplot2 3.3.2     v purrr   0.3.4
-    ## v tibble  3.0.3     v dplyr   1.0.2
-    ## v tidyr   1.1.2     v stringr 1.4.0
-    ## v readr   1.3.1     v forcats 0.5.0
-
-    ## -- Conflicts ---------------------------------------------------------------------- tidyverse_conflicts() --
-    ## x dplyr::between()   masks data.table::between()
-    ## x dplyr::filter()    masks stats::filter()
-    ## x dplyr::first()     masks data.table::first()
-    ## x dplyr::lag()       masks stats::lag()
-    ## x dplyr::last()      masks data.table::last()
-    ## x purrr::transpose() masks data.table::transpose()
 
 ``` r
 air_quality = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
@@ -95,8 +77,6 @@ air_quality %>%
 ![](data_cleaning_files/figure-gfm/plot_aq-3.png)<!-- -->
 
 ``` r
-library(tidyverse)
-
 AQI_temp = air_quality %>%
   select(date,borough,median_pm25,median_o3,median_co,median_no2)
 

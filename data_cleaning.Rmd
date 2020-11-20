@@ -2,6 +2,27 @@
 title: "Data Cleaning"
 output: github_document
 ---
+## Setup
+
+```{r setup, include = F}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Load relevant libraries
+library(tidyverse)
+library(httr)
+library(data.table)
+
+#Theming with viridis, minimal
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
 
 ## COVID Case Data
 
@@ -12,9 +33,6 @@ output: github_document
 ## Air Quality Data
 
 ```{r import_aq}
-library(data.table)
-library(tidyverse)
-
 air_quality = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
   filter(Country == "US") %>%
   filter(City == "Brooklyn" | City == "Queens" | City == "The Bronx" | City == "Staten Island" | City == "Manhattan") %>%
@@ -64,8 +82,6 @@ air_quality %>%
 
 
 ```{r Air_Quality_Index}
-library(tidyverse)
-
 AQI_temp = air_quality %>%
   select(date,borough,median_pm25,median_o3,median_co,median_no2)
 
