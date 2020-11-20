@@ -36,22 +36,6 @@ nyc_cases %>%
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
 ```
 
-<<<<<<< HEAD
-    ## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
-
-    ## ✓ ggplot2 3.3.2     ✓ purrr   0.3.4
-    ## ✓ tibble  3.0.3     ✓ dplyr   1.0.2
-    ## ✓ tidyr   1.1.2     ✓ stringr 1.4.0
-    ## ✓ readr   1.3.1     ✓ forcats 0.5.0
-
-    ## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-    ## x dplyr::between()   masks data.table::between()
-    ## x dplyr::filter()    masks stats::filter()
-    ## x dplyr::first()     masks data.table::first()
-    ## x dplyr::lag()       masks stats::lag()
-    ## x dplyr::last()      masks data.table::last()
-    ## x purrr::transpose() masks data.table::transpose()
-=======
 ![](data_cleaning_files/figure-gfm/clean_cases-1.png)<!-- -->
 
 ``` r
@@ -144,13 +128,12 @@ nyc_daily_borough_testing %>%
 ![](data_cleaning_files/figure-gfm/quickplot%20nycgov%20covid%207day_avg%20with%20reference%20lines-1.png)<!-- -->
 
 ## Air Quality Data
->>>>>>> b659014ead335e19d6e62e6a251ce3ee9cacfdfe
 
 ``` r
 air_quality = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
   filter(Country == "US") %>%
   filter(City == "Brooklyn" | City == "Queens" | City == "The Bronx" | City == "Staten Island" | City == "Manhattan") %>%
-  mutate(Borough = City) %>%
+  mutate(borough = City) %>%
   select(-c(City,Country)) %>%
   pivot_wider(names_from = "Specie", values_from = c("count","min","max","median","variance")) %>% 
   janitor::clean_names()
@@ -165,7 +148,7 @@ air_quality %>%
     geom_line(alpha = .75, size = .75) +
       scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
   labs(
-    title = "Median CO Emmissions over Time for each NYC Borough, 2020",
+    title = "Median CO Emmissions over Time for each NYC borough, 2020",
     x = "Month",
     y = "Median CO (Parts per Million)",
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
@@ -184,7 +167,7 @@ air_quality %>%
     geom_line(alpha = .75, size = .75) +
       scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
   labs(
-    title = "Median Particulate Matter (size<2.5 micrometers) Levels over Time for each NYC Borough, 2020",
+    title = "Median Particulate Matter (size<2.5 micrometers) Levels over Time for each NYC borough, 2020",
     x = "Month",
     y = "Median Particulate Matter (size < 2.5 micrometeres) Levels (Parts per Millon)",
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
@@ -199,7 +182,7 @@ air_quality %>%
     geom_line(alpha = .75, size = .75) +
       scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
   labs(
-    title = "Median Temperature over Time for each NYC Borough, 2020",
+    title = "Median Temperature over Time for each NYC borough, 2020",
     x = "Month",
     y = "Median Temperature (degrees C)",
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
@@ -210,3 +193,109 @@ air_quality %>%
     ## Warning: Removed 17 row(s) containing missing values (geom_path).
 
 ![](data_cleaning_files/figure-gfm/plot_aq-3.png)<!-- -->
+
+``` r
+AQI_temp = air_quality %>%
+  select(date,borough,median_pm25,median_o3,median_co,median_no2)
+
+AQI_formula_O3 = function(AQI){
+  if (AQI <= 54 && AQI >= 0 ){
+    AQI_O3 = (50/54)*(AQI-0) + 0
+  }
+}
+
+AQI_formula_pm25 = function(AQI){
+  if (AQI<= 12&& AQI>=0 ){
+    AQI_pm25 = (50/12)*(AQI-0) + 0
+  }
+  
+  else if (AQI<=35.4 && AQI>=12.1 ){
+    AQI_pm25 = (50/23.3)*(AQI-12.1) + 51
+  }
+  
+  else if (AQI<=55.4 && AQI>=35.5 ){
+    AQI_pm25 = (50/19.9)*(AQI-35.5) + 101
+  }
+  
+  else{
+    AQI_pm25 = (50/94.9)*(AQI-55.5) + 151
+  }
+}
+
+AQI_formula_co = function(AQI){
+  if (AQI<= 4.4&& AQI>=0 ){
+    AQI_co = (50/4.4)*(AQI-0) + 0
+  }
+  
+  else if (AQI<=9.4 && AQI>=4.5 ){
+    AQI_co = (50/4.9)*(AQI-4.5) + 51
+  }
+  
+  else{
+    AQI_co = (50/2.9)*(AQI-12.4) + 101
+  }
+}
+
+AQI_formula_no2 = function(AQI){
+  if (AQI<= 53&& AQI>=0 ){
+    AQI_no2 = (50/53)*(AQI-0) + 0
+  }
+  
+  else if (AQI<=100 && AQI>=54 ){
+    AQI_no2 = (50/46)*(AQI-54) + 51
+  }
+  
+  else{
+    AQI_no2 = (50/259)*(AQI-101) + 101
+  }
+}
+
+AQI_O3 = AQI_temp%>%
+  select(median_o3)%>%
+  purrr::map(~AQI_formula_O3(.x))%>%
+  data.frame()
+
+AQI_pm25 = AQI_temp%>%
+  select(median_pm25)%>%
+  purrr::map(~AQI_formula_pm25(.x))%>%
+  data.frame()
+
+AQI_co = AQI_temp%>%
+  select(median_co)%>%
+  purrr::map(~AQI_formula_co(.x))%>%
+  data.frame()
+
+AQI_no2 = AQI_temp%>%
+  select(median_no2)%>%
+  purrr::map(~AQI_formula_no2(.x))%>%
+  data.frame()
+
+AQI_combined = cbind(AQI_O3,AQI_co,AQI_no2,AQI_pm25)%>%
+  rowwise() %>% 
+  mutate(AQI = max(median_o3,median_co,median_no2,median_pm25))%>%
+  cbind(air_quality%>%pull(date),
+        air_quality%>%pull(borough))
+colnames(AQI_combined) = c("AQI_o3","AQI_co","AQI_no2","AQI_pm25","AQI_Final","date","borough")
+
+AQI_combined = AQI_combined%>%
+  select(c("date","borough","AQI_Final","AQI_o3","AQI_co","AQI_no2","AQI_pm25"))%>%
+  mutate(AQI_Category = if_else(
+    AQI_Final<=50 & AQI_Final>=0,"Good",
+    if_else(AQI_Final<=100&AQI_Final>50,"Moderate",
+    if_else(AQI_Final<=150&AQI_Final>100,"Unhealthy for Sensitive Populations","Unhealthy"))))
+
+
+fwrite(AQI_combined,"./data/Air_Quality_Data_with_AQI.csv")
+
+AQI_combined %>% 
+  group_by(borough) %>% 
+  ggplot(aes(x = date, y = AQI_Final)) +
+  geom_line() +
+  geom_smooth()
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 336 rows containing non-finite values (stat_smooth).
+
+![](data_cleaning_files/figure-gfm/Air_Quality_Index-1.png)<!-- -->
