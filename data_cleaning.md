@@ -58,7 +58,7 @@ air_quality %>%
 
     ## Warning: Removed 4 row(s) containing missing values (geom_path).
 
-![](data_cleaning_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](data_cleaning_files/figure-gfm/plot_aq-1.png)<!-- -->
 
 ``` r
 air_quality %>% 
@@ -73,7 +73,7 @@ air_quality %>%
     caption = "Examining COVID-19 Incidence, P8105 Final Project") 
 ```
 
-![](data_cleaning_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+![](data_cleaning_files/figure-gfm/plot_aq-2.png)<!-- -->
 
 ``` r
 air_quality %>% 
@@ -92,16 +92,16 @@ air_quality %>%
 
     ## Warning: Removed 17 row(s) containing missing values (geom_path).
 
-![](data_cleaning_files/figure-gfm/unnamed-chunk-3-3.png)<!-- -->
+![](data_cleaning_files/figure-gfm/plot_aq-3.png)<!-- -->
 
 ``` r
 library(tidyverse)
 
-AQI_temp = air_quality%>%
+AQI_temp = air_quality %>%
   select(date,borough,median_pm25,median_o3,median_co,median_no2)
 
 AQI_formula_O3 = function(AQI){
-  if (AQI<=54 && AQI>=0 ){
+  if (AQI <= 54 && AQI >= 0 ){
     AQI_O3 = (50/54)*(AQI-0) + 0
   }
 }
