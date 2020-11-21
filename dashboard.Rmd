@@ -192,6 +192,25 @@ nyc_daily_borough_testing =
       date == "2020-08-08" ~ "TRUE",
       date == "2020-10-01" ~ "TRUE")
   )
+
+#Create joined dataset of COVID and Air Quality 
+nyc_daily_borough_testing = 
+  nyc_daily_borough_testing %>% 
+  mutate(
+    date_merge = as.Date(date, format = "%m/%d/%Y")
+  ) 
+AQI_combined = 
+AQI_combined %>% 
+  mutate(
+    date_merge = as.numeric(date)
+  ) %>% 
+    mutate(
+      date_merge = as.Date(date_merge, origin = "1970-01-01")
+  )
+
+covid_air_ytd_joined = left_join(
+  nyc_daily_borough_testing, AQI_combined, by = "date_merge") %>% 
+  select(-date.y, -borough.y)
 ```
 
 
