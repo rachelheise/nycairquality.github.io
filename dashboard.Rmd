@@ -232,7 +232,7 @@ nyc_daily_borough_testing %>%
   geom_smooth(
     aes(x = date, y = total_observed_value), 
         alpha = 0.8, se = F) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %y", limits = as.Date(c("2020-03-01", "2020-12-01"))) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %d", limits = as.Date(c("2020-03-01", "2020-12-01"))) +
   coord_cartesian(ylim = c(0, 6000)) +
   labs(
     title = "Case Count per NYC Borough over Time",
@@ -255,7 +255,7 @@ nyc_daily_borough_testing %>%
                 label = c("State of Emergency Declared"), 
         y = 1000), 
     alpha = 0.5, colour = "red", angle = 90, vjust = -1, text = element_text(size = 6)) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %d", limits = as.Date(c("2020-03-01", "2020-12-01"))) +
   coord_cartesian(ylim = c(0,2000)) +
   labs(
     title = "7 Day Case Count Average per NYC Borough over Time",
