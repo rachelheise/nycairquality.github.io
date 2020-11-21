@@ -15,6 +15,7 @@ library(leaflet)
 library(tidyverse)
 library(httr)
 library(data.table)
+library(shiny)
 
 # Theme
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
@@ -299,6 +300,26 @@ Column {data-width=500}
 -----------------------------------------------------------------------
 
 ### Title for Map
+
+```{r}
+borough_coord = tibble("borough" = c("Bronx", "Manhattan", "Brooklyn", "Queens", "Staten Island"), "latitude" = c(40.8448, 40.7831, 40.6782, 40.7282, 40.5795), "longitude" = c(-73.8648, -73.9712, -73.9442, -73.7949, -74.1502))
+
+renderLeaflet({
+  leaflet(borough_coord) %>%
+    addTiles() %>%
+    setView(-73.95, 40.7228, zoom = 11) %>%
+    addProviderTiles("CartoDB.Positron") %>% 
+    addCircleMarkers(
+      radius = 20,
+      lng = ~longitude,
+      lat = ~latitude,
+      stroke = FALSE,
+      fillOpacity = 0.5
+    )
+  
+})
+```
+
 
 ```{r, eval = FALSE}
 boroughs = read_csv("./data/boroughs.csv") %>% 
