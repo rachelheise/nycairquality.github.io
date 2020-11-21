@@ -210,7 +210,14 @@ AQI_combined %>%
 
 covid_air_ytd_joined = left_join(
   nyc_daily_borough_testing, AQI_combined, by = "date_merge") %>% 
-  select(-date.y, -borough.y)
+  select(-date.y, -borough.y) %>% 
+  rename(
+    date = date.x,
+    borough = borough.x
+  ) %>% 
+  mutate(
+    borough = as.factor(borough)
+  )
 ```
 
 
@@ -278,6 +285,48 @@ nyc_daily_borough_testing %>%
   coord_cartesian(ylim = c(0,2000)) +
   labs(
     title = "7 Day Case Count Average per NYC Borough over Time",
+    x = "Week Number",
+    y = "Value",
+    caption = "P8105 Final Project")
+
+# Test plot of covid cases and air quality by borough, over time
+covid_air_ytd_joined %>% 
+  filter(observation_type == c("case_count")) %>% 
+  filter(total_observation_type == c("case_count")) %>% 
+  group_by(date, borough) %>% 
+  ggplot(aes(x = date)) + 
+  geom_line(
+    aes(x = date, y = observed_value, color = borough),
+    alpha = 0.8) +
+  geom_line(
+    aes(x = date, y = total_observed_value,  group = total_observation_type), 
+    alpha = 0.8) +
+  geom_smooth(
+    aes(x = date, y = observed_value, color = borough), 
+        alpha = 0.8, se = F,
+    method = "gam") +
+  geom_smooth(
+    aes(x = date, y = total_observed_value), 
+        alpha = 0.8, se = F) +
+  geom_line(
+    aes(x = date, y = total_observed_value,  group = total_observation_type),
+    alpha = 0.8) +
+  geom_line(
+    aes(x = date, y = AQI_Final*32.30644095, group = borough),
+    alpha = 0.05) +
+  geom_smooth(
+    aes(x = date, y = AQI_Final*32.30644095,  color = borough),
+    alpha = 0.05) +
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b %d",
+    limits = as.Date(c("2020-03-01", "2020-12-01"))) +
+  scale_y_continuous(
+    name = "COVID Case Count",
+    sec.axis = sec_axis(~./32.30644095, name = "AQI Index")) +
+  coord_cartesian(ylim = c(0, NA)) +
+  labs(
+    title = "Case Count and AQI per NYC Borough over Time",
     x = "Week Number",
     y = "Value",
     caption = "P8105 Final Project")
