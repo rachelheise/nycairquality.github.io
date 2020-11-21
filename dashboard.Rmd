@@ -220,14 +220,20 @@ Column {data-width=500}
 # Quick plot of covid cases by borough
 nyc_daily_borough_testing %>% 
   filter(observation_type == c("case_count")) %>% 
+  filter(total_observation_type == c("case_count")) %>% 
   group_by(date, borough, observation_type) %>% 
   ggplot(aes(x = date)) + 
-  geom_line(aes(x = date, y = observed_value, color = borough)) +
+  geom_line(aes(x = date, y = observed_value, color = borough, alpha = 0.5)) +
+  geom_line(aes(x = date, y = total_observed_value, alpha = 0.5,  group = total_observation_type)) +
   geom_smooth(
     aes(x = date, y = observed_value, color = borough), 
-        alpha = 1, se = F) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
-  coord_cartesian(ylim = c(0,2000)) +
+        alpha = 0.8, se = F,
+    method = "gam") +
+  geom_smooth(
+    aes(x = date, y = total_observed_value), 
+        alpha = 0.8, se = F) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %y", limits = as.Date(c("2020-03-01", "2020-12-01"))) +
+  coord_cartesian(ylim = c(0, 6000)) +
   labs(
     title = "Case Count per NYC Borough over Time",
     x = "Week Number",
@@ -244,9 +250,11 @@ nyc_daily_borough_testing %>%
     as.Date(
       c("2020-03-07","2020-03-22", "2020-08-08", "2020-10-01"))),  
     linetype = 2) +
-  geom_text(aes(x = as.Date("2020-03-07"),
+  geom_text(
+    aes(x = as.Date("2020-03-07"),
                 label = c("State of Emergency Declared"), 
-                y = 1000), colour = "red", angle = 90, vjust = -1, text = element_text(size = 6)) +
+        y = 1000), 
+    alpha = 0.5, colour = "red", angle = 90, vjust = -1, text = element_text(size = 6)) +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
   coord_cartesian(ylim = c(0,2000)) +
   labs(
