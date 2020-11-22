@@ -15,6 +15,7 @@ library(leaflet)
 library(tidyverse)
 library(httr)
 library(data.table)
+library(shiny)
 
 # Theme
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
@@ -298,24 +299,33 @@ AQI_combined %>%
 Column {data-width=500}
 -----------------------------------------------------------------------
 
-### Title for Map
+### Air Quality Index by Borough
 
-```{r, eval = FALSE}
-boroughs = read_csv("./data/boroughs.csv") %>% 
-   str_remove(the_geom, "")
-   
-   
-   
-   separate(the_geom, into = c("name1", "name2"), sep = ",")
+```{r}
+borough_coord = tibble("borough" = c("The Bronx", "Manhattan", "Brooklyn", "Queens", "Staten Island"), "latitude" = c(40.8448, 40.7731, 40.6782, 40.7282, 40.5795), "longitude" = c(-73.8648, -73.9712, -73.9442, -73.7949, -74.1502))
+
+color_df = colorFactor(c("green", "yellow", "orange", "red"), domain = c("Good", "Moderate", "Unhealthy for Sensitive Populations", "Unhealthy"))
+
+AQI_combined = AQI_combined %>% 
+  left_join(borough_coord, by = "borough")
 
 
-
-leaflet() %>%
-   addTiles() %>%
-   setView(-74.00, 40.71, zoom = 12) %>%
-   addProviderTiles("CartoDB.Positron") %>% 
-   addPolygons(lng = c(-73.89680883223774, -73.89693872998792), lat = c(40.79580844515979, 40.79563587285357))
-   
-     
-  addRectangles(lat1 = 40.68, lng1 = -74.06 , lat2 = 40.80, lng2 = -73.94)
+renderLeaflet({
+  AQI_combined %>% 
+    filter(date == input[["date"]]) %>% 
+    leaflet() %>%
+    addTiles() %>%
+    setView(-73.95, 40.7228, zoom = 11) %>%
+    addProviderTiles("CartoDB.Positron") %>% 
+    addCircleMarkers(
+      radius = 20,
+      lng = ~longitude,
+      lat = ~latitude,
+      stroke = FALSE,
+      fillOpacity = 0.8, 
+      color = ~color_df(AQI_Category),
+      label = ~borough
+    )
+})
 ```
+
