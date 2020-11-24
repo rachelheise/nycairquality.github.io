@@ -16,6 +16,7 @@ library(tidyverse)
 library(httr)
 library(data.table)
 library(shiny)
+library(plotly)
 
 # Theme
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
@@ -221,29 +222,7 @@ covid_air_ytd_joined = left_join(
   )
 ```
 
-
-Column {.sidebar}
------------------------------------------------------------------------
-
-Here we can write some introductory text/explain our project.
-
-```{r input}
- dateInput(
-    "date",
-    label = h3("Date input"),
-    value = "2020-02-29", # Default value
-    min = "2020-02-29", # Min value
-    max = "2020-11-17") # Max value
-
-# I put in these dates based on the covid dataset, but we can update as needed
-```
-
-Column {data-width=500}
------------------------------------------------------------------------
-
-### Title for Line Graph
-
-```{r example covid line graphs}
+```{r example covid line graphs, eval = FALSE}
 # Quick plot of covid cases by borough
 nyc_daily_borough_testing %>% 
   filter(observation_type == c("case_count")) %>% 
@@ -290,7 +269,85 @@ nyc_daily_borough_testing %>%
     y = "Value",
     caption = "P8105 Final Project")
 
-# Test plot of covid cases and air quality by borough, over time
+```
+
+```{r example air quality plots, eval=FALSE}
+air_quality %>% 
+  ggplot(aes(x = date, y = median_co, color = borough)) + 
+    geom_point(alpha = .2) +
+    geom_line(alpha = .75, size = .75) +
+      scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+  labs(
+    title = "Median CO Emmissions over Time for each NYC borough, 2020",
+    x = "Month",
+    y = "Median CO (Parts per Million)",
+    caption = "Examining COVID-19 Incidence, P8105 Final Project") 
+
+air_quality %>% 
+  ggplot(aes(x = date, y = median_pm25, color = borough)) + 
+    geom_point(alpha = .2) +
+    geom_line(alpha = .75, size = .75) +
+      scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+  labs(
+    title = "Median Particulate Matter (size<2.5 micrometers) Levels over Time for each NYC borough, 2020",
+    x = "Month",
+    y = "Median Particulate Matter (size < 2.5 micrometeres) Levels (Parts per Millon)",
+    caption = "Examining COVID-19 Incidence, P8105 Final Project") 
+
+air_quality %>% 
+  ggplot(aes(x = date, y = median_temperature, color = borough)) + 
+    geom_point(alpha = .2) +
+    geom_line(alpha = .75, size = .75) +
+      scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+  labs(
+    title = "Median Temperature over Time for each NYC borough, 2020",
+    x = "Month",
+    y = "Median Temperature (degrees C)",
+    caption = "Examining COVID-19 Incidence, P8105 Final Project")
+
+AQI_combined %>% 
+  group_by(borough) %>% 
+  ggplot(aes(x = date, y = AQI_Final)) +
+  geom_line() +
+  geom_smooth()
+```
+
+
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+Here we can write some introductory text/explain our project.
+
+```{r input}
+ dateInput(
+    "date",
+    label = h3("Date input"),
+    value = "2020-02-29", # Default value
+    min = "2020-02-29", # Min value
+    max = "2020-11-17") # Max value
+
+# I put in these dates based on the covid dataset, but we can update as needed
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### COVID Cases and Air Quality Index
+
+```{r covid and air quality plots}
+
+#renderPlotly({
+#covid_air_ytd_joined %>% 
+#  filter(observation_type == c("case_count")) %>% 
+#  filter(total_observation_type == c("case_count")) %>% 
+#  group_by(date, borough) %>% 
+#  summarize(sum_cases = sum(observed_value)) %>% 
+#  plot_ly(x = ~date, y = ~sum_cases,  type = "scatter", color = ~borough, colors = "viridis")
+#})
+
+
+
 covid_air_ytd_joined %>% 
   filter(observation_type == c("case_count")) %>% 
   filter(total_observation_type == c("case_count")) %>% 
@@ -331,48 +388,6 @@ covid_air_ytd_joined %>%
     x = "Week Number",
     y = "Value",
     caption = "P8105 Final Project")
-
-```
-
-```{r example air quality plots}
-air_quality %>% 
-  ggplot(aes(x = date, y = median_co, color = borough)) + 
-    geom_point(alpha = .2) +
-    geom_line(alpha = .75, size = .75) +
-      scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
-  labs(
-    title = "Median CO Emmissions over Time for each NYC borough, 2020",
-    x = "Month",
-    y = "Median CO (Parts per Million)",
-    caption = "Examining COVID-19 Incidence, P8105 Final Project") 
-
-air_quality %>% 
-  ggplot(aes(x = date, y = median_pm25, color = borough)) + 
-    geom_point(alpha = .2) +
-    geom_line(alpha = .75, size = .75) +
-      scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
-  labs(
-    title = "Median Particulate Matter (size<2.5 micrometers) Levels over Time for each NYC borough, 2020",
-    x = "Month",
-    y = "Median Particulate Matter (size < 2.5 micrometeres) Levels (Parts per Millon)",
-    caption = "Examining COVID-19 Incidence, P8105 Final Project") 
-
-air_quality %>% 
-  ggplot(aes(x = date, y = median_temperature, color = borough)) + 
-    geom_point(alpha = .2) +
-    geom_line(alpha = .75, size = .75) +
-      scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
-  labs(
-    title = "Median Temperature over Time for each NYC borough, 2020",
-    x = "Month",
-    y = "Median Temperature (degrees C)",
-    caption = "Examining COVID-19 Incidence, P8105 Final Project")
-
-AQI_combined %>% 
-  group_by(borough) %>% 
-  ggplot(aes(x = date, y = AQI_Final)) +
-  geom_line() +
-  geom_smooth()
 ```
 
 
