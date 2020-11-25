@@ -210,9 +210,69 @@ AQI_no2 = AQI_temp%>%
 
 AQI_combined = cbind(AQI_O3,AQI_co,AQI_no2,AQI_pm25)%>%
   rowwise() %>% 
-  mutate(AQI = max(median_o3,median_co,median_no2,median_pm25))%>%
+  mutate(AQI = max(median_o3,median_co,median_no2,median_pm25,na.rm=T))%>%
   cbind(air_quality_2019%>%pull(Date),
-        air_quality_2019%>%pull(borough))
+        air_quality_2019%>%pull(borough))%>%
+  filter(AQI != -Inf)
+```
+
+    ## Warning: Problem with `mutate()` input `AQI`.
+    ## x no non-missing arguments to max; returning -Inf
+    ## i Input `AQI` is `max(median_o3, median_co, median_no2, median_pm25, na.rm = T)`.
+    ## i The error occurred in row 225.
+
+    ## Warning in max(median_o3, median_co, median_no2, median_pm25, na.rm = T): no
+    ## non-missing arguments to max; returning -Inf
+
+    ## Warning: Problem with `mutate()` input `AQI`.
+    ## x no non-missing arguments to max; returning -Inf
+    ## i Input `AQI` is `max(median_o3, median_co, median_no2, median_pm25, na.rm = T)`.
+    ## i The error occurred in row 232.
+
+    ## Warning in max(median_o3, median_co, median_no2, median_pm25, na.rm = T): no
+    ## non-missing arguments to max; returning -Inf
+
+    ## Warning: Problem with `mutate()` input `AQI`.
+    ## x no non-missing arguments to max; returning -Inf
+    ## i Input `AQI` is `max(median_o3, median_co, median_no2, median_pm25, na.rm = T)`.
+    ## i The error occurred in row 233.
+
+    ## Warning in max(median_o3, median_co, median_no2, median_pm25, na.rm = T): no
+    ## non-missing arguments to max; returning -Inf
+
+    ## Warning: Problem with `mutate()` input `AQI`.
+    ## x no non-missing arguments to max; returning -Inf
+    ## i Input `AQI` is `max(median_o3, median_co, median_no2, median_pm25, na.rm = T)`.
+    ## i The error occurred in row 252.
+
+    ## Warning in max(median_o3, median_co, median_no2, median_pm25, na.rm = T): no
+    ## non-missing arguments to max; returning -Inf
+
+    ## Warning: Problem with `mutate()` input `AQI`.
+    ## x no non-missing arguments to max; returning -Inf
+    ## i Input `AQI` is `max(median_o3, median_co, median_no2, median_pm25, na.rm = T)`.
+    ## i The error occurred in row 254.
+
+    ## Warning in max(median_o3, median_co, median_no2, median_pm25, na.rm = T): no
+    ## non-missing arguments to max; returning -Inf
+
+    ## Warning: Problem with `mutate()` input `AQI`.
+    ## x no non-missing arguments to max; returning -Inf
+    ## i Input `AQI` is `max(median_o3, median_co, median_no2, median_pm25, na.rm = T)`.
+    ## i The error occurred in row 255.
+
+    ## Warning in max(median_o3, median_co, median_no2, median_pm25, na.rm = T): no
+    ## non-missing arguments to max; returning -Inf
+
+    ## Warning: Problem with `mutate()` input `AQI`.
+    ## x no non-missing arguments to max; returning -Inf
+    ## i Input `AQI` is `max(median_o3, median_co, median_no2, median_pm25, na.rm = T)`.
+    ## i The error occurred in row 265.
+
+    ## Warning in max(median_o3, median_co, median_no2, median_pm25, na.rm = T): no
+    ## non-missing arguments to max; returning -Inf
+
+``` r
 colnames(AQI_combined) = c("AQI_o3","AQI_co","AQI_no2","AQI_pm25","AQI_Final","date","borough")
 
 AQI_combined = AQI_combined%>%

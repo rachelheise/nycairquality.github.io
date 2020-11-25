@@ -176,9 +176,11 @@ AQI_no2 = AQI_temp%>%
 
 AQI_combined = cbind(AQI_O3,AQI_co,AQI_no2,AQI_pm25)%>%
   rowwise() %>% 
-  mutate(AQI = max(median_o3,median_co,median_no2,median_pm25))%>%
+  mutate(AQI = max(median_o3,median_co,median_no2,median_pm25,na.rm=T))%>%
   cbind(air_quality_2019%>%pull(Date),
-        air_quality_2019%>%pull(borough))
+        air_quality_2019%>%pull(borough))%>%
+  filter(AQI != -Inf)
+
 colnames(AQI_combined) = c("AQI_o3","AQI_co","AQI_no2","AQI_pm25","AQI_Final","date","borough")
 
 AQI_combined = AQI_combined%>%
