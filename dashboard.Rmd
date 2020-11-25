@@ -473,22 +473,6 @@ AQI_combined_2020 %>%
 
 
 
-Column {.sidebar}
------------------------------------------------------------------------
-
-Here we can write some introductory text/explain our project.
-
-```{r input}
- dateInput(
-    "date",
-    label = h3("Date input"),
-    value = "2020-02-29", # Default value
-    min = "2020-02-29", # Min value
-    max = "2020-11-17") # Max value
-
-# I put in these dates based on the covid dataset, but we can update as needed
-```
-
 Column {data-width=500}
 -----------------------------------------------------------------------
 
@@ -593,3 +577,18 @@ renderLeaflet({
 
 ```
 
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+Here we can write some introductory text/explain our project.
+
+```{r input}
+ dateInput(
+    "date",
+    label = h3("Date input"),
+    value = "2020-02-29", # Default value
+    min = "2020-02-29", # Min value
+    max = "2020-11-17") # Max value
+
+# I put in these dates based on the covid dataset, but we can update as needed
+```
