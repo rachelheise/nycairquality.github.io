@@ -291,7 +291,11 @@ data_2020 = fread("./data/Air_Quality_Data_with_AQI.csv")%>%
 combined = merge(data_2019,data_2020,by=c("month","day","borough"))%>%
   mutate(Adjusted_Value = AQI_Final.y*100/AQI_Final.x)%>%
   filter(year.x!=year.y) %>% #x values correspond to 2019 and y values correspond to 2020
-  arrange(borough, month, day, year.x, AQI_Final.x, year.y, AQI_Final.y, Adjusted_Value) 
+  mutate(
+    date = str_c(year.y, month, day, sep = "-"),
+    date = as.Date(date, tryFormats = c("%Y-%m-%d"))
+  )
+
 
 fwrite(combined,"./data/AQI_2019_AND_2020.csv",sep=",")
 ```
