@@ -218,7 +218,8 @@ AQI_2019 =
 
 ```{r merge 2019 and 2020 air quality data, include = FALSE}
 AQI_2019_and_2020 =
-  full_join(AQI_2019, AQI_2020) %>% 
+  rbind(AQI_2019, AQI_2020) %>% 
+  as_tibble() %>% 
   mutate(
     date = as.Date(date, tryFormats = c("%Y-%m-%d")),
     borough = recode(borough, "The Bronx" = "Bronx"))
