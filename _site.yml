@@ -1,0 +1,9 @@
+name: "P8105 Final Project -- NYC Air Quality"
+output_dir: "."
+navbar:
+  title: "Home"
+  left:
+    - text: "Dashboard"
+      href: dashboard.html
+output:
+  html_document
