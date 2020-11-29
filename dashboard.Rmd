@@ -380,22 +380,6 @@ AQI_combined_2020 %>%
   geom_smooth()
 ```
 
-Column {.sidebar}
------------------------------------------------------------------------
-
-Here we can write some introductory text/explain our project.
-
-```{r input}
- dateInput(
-    "date",
-    label = h3("Date input"),
-    value = "2020-02-29", # Default value
-    min = "2020-02-29", # Min value
-    max = "2020-11-17") # Max value
-
-# I put in these dates based on the covid dataset, but we can update as needed
-```
-
 Column {data-width=500}
 -----------------------------------------------------------------------
 
@@ -478,6 +462,8 @@ AQI_combined_2020 = AQI_combined_2020 %>%
 renderLeaflet({
   AQI_combined_2020 %>% 
     filter(date == input[["date"]]) %>% 
+    mutate(popup = str_c("<strong>", borough, "</strong>", "<br/>", "Date: ", date, "<br/>", "Air Quality Category: ", AQI_Category, "<br/>", "Air Quality Index: ", round(AQI_Final, 2), "<br/>", "Carbon Monoxide Level: ", round(AQI_co, 2)) %>% 
+    map(htmltools::HTML)) %>%
     leaflet() %>%
     addTiles() %>%
     setView(-73.95, 40.7228, zoom = 11) %>%
@@ -489,8 +475,31 @@ renderLeaflet({
       stroke = FALSE,
       fillOpacity = 0.8, 
       color = ~color_df(AQI_Category),
-      label = ~borough
-    )
+      label = ~popup
+    ) %>% 
+    addLegend("bottomright", colors = c("green", "yellow", "orange", "red"),
+              labels = c("Good", "Moderate", "Unhealthy for Sensitive Populations", "Unhealthy"),
+              title = "Air Quality Index")
 })
+
+
+
+
+
 ```
 
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+Here we can write some introductory text/explain our project.
+
+```{r input}
+ dateInput(
+    "date",
+    label = h3("Date input"),
+    value = "2020-02-29", # Default value
+    min = "2020-02-29", # Min value
+    max = "2020-11-17") # Max value
+
+# I put in these dates based on the covid dataset, but we can update as needed
+```
