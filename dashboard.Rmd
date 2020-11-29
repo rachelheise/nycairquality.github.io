@@ -222,7 +222,12 @@ AQI_2019_and_2020 =
   as_tibble() %>% 
   mutate(
     date = as.Date(date, tryFormats = c("%Y-%m-%d")),
-    borough = recode(borough, "The Bronx" = "Bronx"))
+    borough = recode(borough, "The Bronx" = "Bronx"),
+    IAQI_o3 = unlist(IAQI_o3),
+    IAQI_pm25 = unlist(IAQI_pm25),
+    IAQI_co = unlist(IAQI_co),
+    IAQI_no2 = unlist(IAQI_no2)
+  )
 ```
 
 ```{r nyc-wide covid data cleaning, include = FALSE}
