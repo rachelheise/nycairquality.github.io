@@ -8,8 +8,7 @@ output:
 runtime: shiny
 ---
 
-```{r dashboard setup, include = FALSE}
-# Libraries
+```{r setup, include = FALSE}
 library(flexdashboard)
 library(leaflet)
 library(tidyverse)
@@ -18,7 +17,6 @@ library(data.table)
 library(shiny)
 library(plotly)
 
-# Theme
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 options(
   ggplot2.continuous.colour = "viridis",
@@ -29,276 +27,204 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
-```{r air quality data cleaning 2020, include = FALSE}
-# Data import and cleaning 
-air_quality = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
-  filter(Country == "US") %>%
-  filter(City == "Brooklyn" | City == "Queens" | City == "The Bronx" | City == "Staten Island" | City == "Manhattan") %>%
-  mutate(borough = City) %>%
-  select(-c(City,Country)) %>%
-  pivot_wider(names_from = "Specie", values_from = c("count","min","max","median","variance")) %>% 
-  janitor::clean_names()
+```{r 2020 air quality data cleaning, include = FALSE}
+# Data import and cleaning
 
-fwrite(air_quality,"./data/Just_NYC_Air_Quality_Data.csv")
+AQI_2020 = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
+  janitor::clean_names() %>% 
+  filter(country == "US") %>%
+  filter(city == "Brooklyn" | city == "Queens" | city == "The Bronx" | city == "Staten Island" | city == "Manhattan") %>%
+  mutate(borough = city) %>%
+  select(-c(city, country)) %>%
+  pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
+  select(date, borough, median_pm25, median_o3, median_co, median_no2)
 
-# Adding air quality index
-AQI_temp = air_quality %>%
-  select(date,borough,median_pm25,median_o3,median_co,median_no2)
+# Write functions that calculate the individual AQI (IAQI) for each individual pollutant
 
-AQI_formula_O3 = function(AQI){
-  if (AQI <= 54 && AQI >= 0 ){
-    AQI_O3 = (50/54)*(AQI-0) + 0
-  }
-}
-
-AQI_formula_pm25 = function(AQI){
-  if (AQI<= 12&& AQI>=0 ){
-    AQI_pm25 = (50/12)*(AQI-0) + 0
+IAQI_formula_o3 = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    AQI_o3 = 0
   }
   
-  else if (AQI<=35.4 && AQI>=12.1 ){
-    AQI_pm25 = (50/23.3)*(AQI-12.1) + 51
+  else if (AQI <= 54 && AQI >= 0 ) {
+    IAQI_o3 = (50/54)*(AQI - 0) + 0
   }
   
-  else if (AQI<=55.4 && AQI>=35.5 ){
-    AQI_pm25 = (50/19.9)*(AQI-35.5) + 101
+  else if (AQI <= 70 && AQI > 54 ) {
+    IAQI_o3 = (50/22)*(AQI - 55) + 51
   }
   
-  else{
-    AQI_pm25 = (50/94.9)*(AQI-55.5) + 151
-  }
-}
-
-AQI_formula_co = function(AQI){
-  if (AQI<= 4.4&& AQI>=0 ){
-    AQI_co = (50/4.4)*(AQI-0) + 0
+  else if (AQI <= 85 && AQI > 70) {
+    IAQI_o3 = (50/14)*(AQI - 70) + 101
   }
   
-  else if (AQI<=9.4 && AQI>=4.5 ){
-    AQI_co = (50/4.9)*(AQI-4.5) + 51
+  else if (AQI <= 105 && AQI > 85 ) {
+    IAQI_o3 = (50/19)*(AQI - 86) + 151
+  }
+  
+  else if (AQI <= 200 && AQI > 105 ) {
+    IAQI_o3 = (99/94)*(AQI - 106) + 201
+  }
+  
+  else if (AQI <= 404 && AQI > 204) {
+    IAQI_o3 = (99/199)*(AQI - 205) + 201
   }
   
   else{
-    AQI_co = (50/2.9)*(AQI-12.4) + 101
+    IAQI_o3 = (199/199)*(AQI - 405) + 301
   }
 }
 
-AQI_formula_no2 = function(AQI){
-  if (AQI<= 53&& AQI>=0 ){
-    AQI_no2 = (50/53)*(AQI-0) + 0
+IAQI_formula_pm25 = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    IAQI_o3 = 0
   }
   
-  else if (AQI<=100 && AQI>=54 ){
-    AQI_no2 = (50/46)*(AQI-54) + 51
+  else if (AQI <= 12 && AQI >= 0 ) {
+    IAQI_pm25 = (50/12)*(AQI - 0) + 0
+  }
+  
+  else if (AQI <= 35.4 && AQI >= 12.1 ) {
+    IAQI_pm25 = (50/23.3)*(AQI - 12.1) + 51
+  }
+  
+  else if (AQI <= 55.4 && AQI >= 35.5 ) {
+    IAQI_pm25 = (50/19.9)*(AQI - 35.5) + 101
+  }
+  
+  else if (AQI <= 150.4 && AQI >= 55.5 ) {
+    IAQI_pm25 = (50/94.9)*(AQI - 55.5) + 151
   }
   
   else{
-    AQI_no2 = (50/259)*(AQI-101) + 101
+    IAQI_pm25 = (99/99.9)*(AQI - 150.5) + 201
   }
 }
 
-AQI_O3 = AQI_temp%>%
-  select(median_o3)%>%
-  purrr::map(~AQI_formula_O3(.x))%>%
-  data.frame()
-
-AQI_pm25 = AQI_temp%>%
-  select(median_pm25)%>%
-  purrr::map(~AQI_formula_pm25(.x))%>%
-  data.frame()
-
-AQI_co = AQI_temp%>%
-  select(median_co)%>%
-  purrr::map(~AQI_formula_co(.x))%>%
-  data.frame()
-
-AQI_no2 = AQI_temp%>%
-  select(median_no2)%>%
-  purrr::map(~AQI_formula_no2(.x))%>%
-  data.frame()
-
-AQI_combined_2020 = cbind(AQI_O3,AQI_co,AQI_no2,AQI_pm25)%>%
-  rowwise() %>% 
-  mutate(AQI = max(median_o3,median_co,median_no2,median_pm25,na.rm=T))%>%
-  cbind(air_quality%>%pull(date),
-        air_quality%>%pull(borough))
-colnames(AQI_combined_2020) = c("AQI_o3","AQI_co","AQI_no2","AQI_pm25","AQI_Final","date","borough")
-
-AQI_combined_2020 = AQI_combined_2020%>%
-  select(c("date","borough","AQI_Final","AQI_o3","AQI_co","AQI_no2","AQI_pm25"))%>%
-  mutate(AQI_Category = if_else(
-    AQI_Final<=50 & AQI_Final>=0,"Good",
-    if_else(AQI_Final<=100&AQI_Final>50,"Moderate",
-    if_else(AQI_Final<=150&AQI_Final>100,"Unhealthy for Sensitive Populations","Unhealthy"))))
-
-
-fwrite(AQI_combined_2020,"./data/Air_Quality_Data_with_AQI.csv")
-```
-
-
-
-```{r air quality data cleaning 2019, include = FALSE}
-library(data.table)
-library(tidyverse)
-# setwd("./data/2019_Data/")
-# files = list.files(".")
-# air_quality_2019 = files %>%        
-#   map(~ fread(.x)) %>%
-#   reduce(rbind)%>%
-#   filter(Country == "US") %>%
-#   filter(City == "Brooklyn" | City == "Queens" | City == "The Bronx" | City == "Staten Island" | City == "Manhattan")%>%
-#   mutate(borough = City) %>%
-#   filter(Specie == "pm25" | Specie == "temperature"| Specie == "o3" | Specie == "no2" | Specie == "co")%>%
-#   select(-c(City,Country,variance,count))%>%
-#   distinct()%>%
-#   tidyr::pivot_wider(names_from = Specie, values_from = c(median,max,min))
-# 
-# 
-# fwrite(air_quality_2019,"Just_NYC_Air_Quality_Data_2019.csv")
-
-AQI_temp = fread("./data/2019_data/Just_NYC_Air_Quality_Data_2019.csv")%>%
-  select(Date,borough,median_pm25,median_o3,median_co,median_no2)
-
-AQI_formula_O3 = function(AQI){
-  if (AQI<=54 && AQI>=0 ){
-    AQI_O3 = (50/54)*(AQI-0) + 0
+IAQI_formula_co = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    IAQI_o3 = 0
   }
   
-  else if (AQI<=70 && AQI>54 ){
-    AQI_O3 = (50/22)*(AQI-55) + 51
+  else if (AQI <= 4.4 && AQI >= 0) {
+    IAQI_co = (50/4.4)*(AQI - 0) + 0
   }
   
-  else if (AQI<=85 && AQI>70){
-    AQI_O3 = (50/14)*(AQI-70) + 101
-  }
-  
-  else if (AQI<=105 && AQI>85 ){
-    AQI_O3 = (50/19)*(AQI-86) + 151
-  }
-  
-  else if (AQI<=200 && AQI>105 ){
-    AQI_O3 = (99/94)*(AQI-106) + 201
-  }
-  
-  else if (AQI<=404 && AQI>204){
-    AQI_O3 = (99/199)*(AQI-205) + 201
+  else if (AQI <= 9.4 && AQI >= 4.5 ) {
+    IAQI_co = (50/4.9)*(AQI - 4.5) + 51
   }
   
   else{
-    AQI_O3 = (199/199)*(AQI-405) + 301
+    IAQI_co = (199/19.9)*(AQI - 30.5) + 301
   }
 }
 
-AQI_formula_pm25 = function(AQI){
-  if (AQI<= 12&& AQI>=0 ){
-    AQI_pm25 = (50/12)*(AQI-0) + 0
+IAQI_formula_no2 = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    IAQI_o3 = 0
   }
   
-  else if (AQI<=35.4 && AQI>=12.1 ){
-    AQI_pm25 = (50/23.3)*(AQI-12.1) + 51
+  else if (AQI <= 53 && AQI >= 0 ) {
+    IAQI_no2 = (50/53)*(AQI - 0) + 0
   }
   
-  else if (AQI<=55.4 && AQI>=35.5 ){
-    AQI_pm25 = (50/19.9)*(AQI-35.5) + 101
-  }
-  
-  else if (AQI<=150.4 && AQI>=55.5 ){
-    AQI_pm25 = (50/94.9)*(AQI-55.5) + 151
+  else if (AQI <= 100 && AQI >= 54 ) {
+    IAQI_no2 = (50/46)*(AQI - 54) + 51
   }
   
   else{
-    AQI_pm25 = (99/99.9)*(AQI-150.5) + 201
+    IAQI_no2 = (50/259)*(AQI - 101) + 101
   }
 }
 
-AQI_formula_co = function(AQI){
-  if (AQI<= 4.4&& AQI>=0 ){
-    AQI_co = (50/4.4)*(AQI-0) + 0
-  }
-  
-  else if (AQI<=9.4 && AQI>=4.5 ){
-    AQI_co = (50/4.9)*(AQI-4.5) + 51
-  }
-  
-  else{
-    AQI_co = (199/19.9)*(AQI-30.5) + 301
-}
-}
+# Generate IAQIs, determine AQI and AQI category based on max IAQI per day
 
-AQI_formula_no2 = function(AQI){
-  if (AQI<= 53&& AQI>=0 ){
-    AQI_no2 = (50/53)*(AQI-0) + 0
-  }
-  
-  else if (AQI<=100 && AQI>=54 ){
-    AQI_no2 = (50/46)*(AQI-54) + 51
-  }
-  
-  else{
-    AQI_no2 = (50/259)*(AQI-101) + 101
-  }
-}
-
-AQI_O3 = AQI_temp%>%
-  select(median_o3)%>%
-  purrr::map(~AQI_formula_O3(.x))%>%
-  data.frame()
-
-AQI_pm25 = AQI_temp%>%
-  select(median_pm25)%>%
-  purrr::map(~AQI_formula_pm25(.x))%>%
-  data.frame()
-
-AQI_co = AQI_temp%>%
-  select(median_co)%>%
-  purrr::map(~AQI_formula_co(.x))%>%
-  data.frame()
-
-AQI_no2 = AQI_temp%>%
-  select(median_no2)%>%
-  purrr::map(~AQI_formula_no2(.x))%>%
-  data.frame()
-
-AQI_combined_2019 = cbind(AQI_O3,AQI_co,AQI_no2,AQI_pm25)%>%
-  rowwise() %>% 
-  mutate(AQI = max(median_o3,median_co,median_no2,median_pm25,na.rm=T))%>%
-  cbind(AQI_temp%>%pull(Date),
-        AQI_temp%>%pull(borough))%>%
-  filter(AQI != -Inf)
-
-colnames(AQI_combined_2019) = c("AQI_o3","AQI_co","AQI_no2","AQI_pm25","AQI_Final","date","borough")
-
-AQI_combined_2019 = AQI_combined_2019%>%
-  select(c("date","borough","AQI_Final","AQI_o3","AQI_co","AQI_no2","AQI_pm25"))%>%
-  mutate(AQI_Category = if_else(
-    AQI_Final<=50 & AQI_Final>=0,"Good",
-    if_else(AQI_Final<=100&AQI_Final>50,"Moderate",
-    if_else(AQI_Final<=150&AQI_Final>100,"Unhealthy for Sensitive Populations",if_else(AQI_Final<=200&AQI_Final>150,"Unhealthy",if_else(AQI_Final<=300&AQI_Final>200,"Very Unhealthy","Hazardous"))))))
-
-
-fwrite(AQI_combined_2019,"./data/2019_Data/Air_Quality_Data_with_AQI_2019.csv")
-```
-
-```{r merge 2019 and 2020 Air Quality Data, include = F}
-data_2019 = fread("./data/2019_Data/Air_Quality_Data_with_AQI_2019.csv")%>%
-  mutate(date = as.character(date))%>%
-  separate(date, into = c("year","month","day"),sep="-")
-
-data_2020 = fread("./data/Air_Quality_Data_with_AQI.csv")%>%
-  mutate(date = as.character(date))%>%
-  separate(date, into = c("year","month","day"),sep="-")
-
-combined = merge(data_2019,data_2020,by=c("month","day","borough"))%>%
-  mutate(Adjusted_Value = AQI_Final.y*100/AQI_Final.x)%>%
-  filter(year.x!=year.y) %>% #x values correspond to 2019 and y values correspond to 2020
+AQI_2020 =
+  AQI_2020 %>% 
   mutate(
-    date = str_c(year.y, month, day, sep = "-"),
-    date = as.Date(date, tryFormats = c("%Y-%m-%d"))
+    IAQI_o3 = map(median_o3, IAQI_formula_o3),
+    IAQI_pm25 = map(median_pm25, IAQI_formula_pm25),
+    IAQI_co = map(median_co, IAQI_formula_co),
+    IAQI_no2 = map(median_no2, IAQI_formula_no2)
+    ) %>% 
+  rowwise() %>% 
+  mutate(
+    AQI = max(IAQI_o3, IAQI_pm25, IAQI_co, IAQI_no2, na.rm = TRUE), # Taking max of the individual AQI scores, right?
+    AQI_category =
+      if_else(
+        AQI <= 50 & AQI >= 0,
+        "Good",
+        if_else(
+          AQI <= 100 & AQI > 50,
+          "Moderate",
+          if_else(
+            AQI <= 150 & AQI > 100,
+            "Unhealthy for Sensitive Populations",
+            "Unhealthy")
+        )
+      )
   )
-
-
-fwrite(combined,"./data/AQI_2019_AND_2020.csv",sep=",")
 ```
+
+
+```{r 2019 air quality data cleaning, include = FALSE}
+# Data import and cleaning
+
+AQI_2019 =
+  tibble(
+    path = list.files("./data/AQI_data_2019") # Listing all file names
+    ) %>% 
+  mutate(
+    path = str_c("./data/AQI_data_2019/", path), # Completing the paths
+    data = map(path, fread) # Reading the data for each path
+    ) %>% 
+  unnest(data) %>% 
+  janitor::clean_names() %>% 
+  filter(country == "US") %>%
+  filter(city == "Brooklyn" | city == "Queens" | city == "The Bronx" | city == "Staten Island" | city == "Manhattan") %>%
+  mutate(borough = city) %>%
+  select(-c(city, country)) %>%
+  pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
+  select(date, borough, median_pm25, median_o3, median_co, median_no2)
+
+# Generate IAQIs, determine AQI and AQI category based on max IAQI per day
+
+AQI_2019 =
+  AQI_2019 %>% 
+  mutate(
+    IAQI_o3 = map(median_o3, IAQI_formula_o3),
+    IAQI_pm25 = map(median_pm25, IAQI_formula_pm25),
+    IAQI_co = map(median_co, IAQI_formula_co),
+    IAQI_no2 = map(median_no2, IAQI_formula_no2)
+    ) %>% 
+  rowwise() %>% 
+  mutate(
+    AQI = max(IAQI_o3, IAQI_pm25, IAQI_co, IAQI_no2, na.rm = TRUE), # Taking max of the individual AQI scores, right?
+    AQI_category =
+      if_else(
+        AQI <= 50 & AQI >= 0,
+        "Good",
+        if_else(
+          AQI <= 100 & AQI > 50,
+          "Moderate",
+          if_else(
+            AQI <= 150 & AQI > 100,
+            "Unhealthy for Sensitive Populations",
+            "Unhealthy")
+        )
+      )
+  )
+```
+
+```{r merge 2019 and 2020 air quality data, include = FALSE}
+AQI_2019_and_2020 =
+  rbind(AQI_2019, AQI_2020) %>% 
+  as_tibble() %>% 
+  mutate(
+    date = as.Date(date, tryFormats = c("%Y-%m-%d")),
+    borough = recode(borough, "The Bronx" = "Bronx"))
+```
+
 ```{r nyc-wide covid data cleaning, include = FALSE}
 nyc_cases =
   GET("https://data.cityofnewyork.us/resource/rc75-m7u3.csv") %>% # Reading in the data
@@ -308,8 +234,6 @@ nyc_cases =
   mutate(
     date = as.Date(date, tryFormats = c("%Y-%m-%d")) # as.Date() by default cannot convert POSIXct to date; no data lost
   )
-## Note: This dataset also contains hospitalized count and death count.
-## I removed those measures for now for simplicity, but we can always decide to retain them later if we think they would be useful.
 ```
 
 ```{r by borough covid data cleaning, cache = TRUE, include = FALSE}
@@ -319,7 +243,8 @@ nyc_daily_borough_testing =
   janitor::clean_names() %>% 
   rename(date = date_of_interest) %>% 
   mutate(
-    date = as.Date(date, format = "%m/%d/%Y")
+    date = as.Date(date, format = "%m/%d/%Y"),
+    date = as.Date(date, tryFormats = c("%Y-%m-%d"))
   ) %>%
   pivot_longer(
     bx_case_count:si_death_count_7day_avg,
@@ -358,32 +283,11 @@ nyc_daily_borough_testing =
       date == "2020-08-08" ~ "TRUE",
       date == "2020-10-01" ~ "TRUE")
   )
+```
 
-#Create joined dataset of COVID and Air Quality 
-nyc_daily_borough_testing = 
-  nyc_daily_borough_testing %>% 
-  mutate(
-    date_merge = as.Date(date, format = "%m/%d/%Y")
-  ) 
-AQI_combined_2020 = 
-AQI_combined_2020 %>% 
-  mutate(
-    date_merge = as.numeric(date)
-  ) %>% 
-    mutate(
-      date_merge = as.Date(date_merge, origin = "1970-01-01")
-  )
-
-covid_air_ytd_joined = left_join(
-  nyc_daily_borough_testing, AQI_combined_2020, by = "date_merge") %>% 
-  select(-date.y, -borough.y) %>% 
-  rename(
-    date = date.x,
-    borough = borough.x
-  ) %>% 
-  mutate(
-    borough = as.factor(borough)
-  )
+```{r merge air quality and covid data}
+AQI_covid_master =
+  left_join(nyc_daily_borough_testing, AQI_2019_and_2020, by = c("date", "borough"))
 ```
 
 ```{r example covid line graphs, eval = FALSE}
@@ -435,7 +339,7 @@ nyc_daily_borough_testing %>%
 
 ```
 
-```{r example air quality plots, eval=FALSE}
+```{r example air quality plots, eval = FALSE}
 air_quality %>% 
   ggplot(aes(x = date, y = median_co, color = borough)) + 
     geom_point(alpha = .2) +
@@ -476,8 +380,6 @@ AQI_combined_2020 %>%
   geom_smooth()
 ```
 
-
-
 Column {.sidebar}
 -----------------------------------------------------------------------
 
@@ -499,7 +401,7 @@ Column {data-width=500}
 
 ### COVID Cases and Air Quality Index
 
-```{r covid and air quality plots}
+```{r plotly line plot 1, eval = FALSE}
 
 #renderPlotly({
 #covid_air_ytd_joined %>% 
@@ -554,13 +456,17 @@ covid_air_ytd_joined %>%
     caption = "P8105 Final Project")
 ```
 
+```{r plotly line plot 2, eval = FALSE}
+
+```
+
 
 Column {data-width=500}
 -----------------------------------------------------------------------
 
 ### Air Quality Index by Borough
 
-```{r}
+```{r eval = FALSE}
 borough_coord = tibble("borough" = c("The Bronx", "Manhattan", "Brooklyn", "Queens", "Staten Island"), "latitude" = c(40.8448, 40.7731, 40.6782, 40.7282, 40.5795), "longitude" = c(-73.8648, -73.9712, -73.9442, -73.7949, -74.1502))
 
 color_df = colorFactor(c("green", "yellow", "orange", "red"), domain = c("Good", "Moderate", "Unhealthy for Sensitive Populations", "Unhealthy"))
