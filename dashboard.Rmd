@@ -450,7 +450,7 @@ Column {data-width=500}
 
 ### Air Quality Index by Borough
 
-```{r eval = FALSE}
+```{r}
 borough_coord = tibble("borough" = c("Bronx", "Manhattan", "Brooklyn", "Queens", "Staten Island"), "latitude" = c(40.8448, 40.7731, 40.6782, 40.7282, 40.5795), "longitude" = c(-73.8648, -73.9712, -73.9442, -73.7949, -74.1502))
 
 color_df = colorFactor(c("green", "yellow", "orange", "red"), domain = c("Good", "Moderate", "Unhealthy for Sensitive Populations", "Unhealthy"))
@@ -458,11 +458,10 @@ color_df = colorFactor(c("green", "yellow", "orange", "red"), domain = c("Good",
 AQI_covid_master = AQI_covid_master %>% 
   left_join(borough_coord, by = "borough")
 
-
 renderLeaflet({
   AQI_covid_master %>% 
     filter(date == input[["date"]]) %>% 
-    mutate(popup = str_c("<strong>", borough, "</strong>", "<br/>", "Date: ", date, "<br/>", "Air Quality Category: ", AQI_category, "<br/>", "Air Quality Index: ", round(AQI, 2), "<br/>", "Carbon Monoxide Level: ", round(IAQI_co, 2)) %>% 
+    mutate(popup = str_c("<strong>", borough, "</strong>", "<br/>", "Date: ", date, "<br/>", "Air Quality Category: ", AQI_category, "<br/>", "Air Quality Index: ", round(AQI, 2), "<br/>", "Carbon Monoxide Level: ", lapply(IAQI_co, round, 2)) %>% 
     map(htmltools::HTML)) %>%
     leaflet() %>%
     addTiles() %>%
@@ -481,10 +480,6 @@ renderLeaflet({
               labels = c("Good", "Moderate", "Unhealthy for Sensitive Populations", "Unhealthy"),
               title = "Air Quality Index")
 })
-
-
-
-
 
 ```
 
