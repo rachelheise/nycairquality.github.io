@@ -16,6 +16,9 @@ library(httr)
 library(data.table)
 library(shiny)
 library(plotly)
+library(mgcv)
+
+
 
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 options(
@@ -222,17 +225,11 @@ AQI_2019_and_2020 =
   as_tibble() %>% 
   mutate(
     date = as.Date(date, tryFormats = c("%Y-%m-%d")),
-    borough = recode(borough, "The Bronx" = "Bronx"))
-```
-
-```{r nyc-wide covid data cleaning, include = FALSE}
-nyc_cases =
-  GET("https://data.cityofnewyork.us/resource/rc75-m7u3.csv") %>% # Reading in the data
-  content("parsed") %>% 
-  rename(date = date_of_interest) %>% # Renaming the date variable for simplicity
-  select(date, case_count) %>% # Only retaining date and case count for simplicity
-  mutate(
-    date = as.Date(date, tryFormats = c("%Y-%m-%d")) # as.Date() by default cannot convert POSIXct to date; no data lost
+    borough = recode(borough, "The Bronx" = "Bronx"),
+    IAQI_o3 = unlist(IAQI_o3),
+    IAQI_pm25 = unlist(IAQI_pm25),
+    IAQI_co = unlist(IAQI_co),
+    IAQI_no2 = unlist(IAQI_no2)
   )
 ```
 
@@ -291,51 +288,80 @@ AQI_covid_master =
 ```
 
 ```{r example covid line graphs, eval = FALSE}
-# Quick plot of covid cases by borough
-nyc_daily_borough_testing %>% 
+##make ggplot objects for plotly render
+#overall
+covid_aqi_overall_ggplot = 
+AQI_covid_master %>% 
   filter(observation_type == c("case_count")) %>% 
   filter(total_observation_type == c("case_count")) %>% 
-  group_by(date, borough, observation_type) %>% 
+  group_by(date, borough) %>% 
   ggplot(aes(x = date)) + 
-  geom_line(aes(x = date, y = observed_value, color = borough, alpha = 0.5)) +
-  geom_line(aes(x = date, y = total_observed_value, alpha = 0.5,  group = total_observation_type)) +
+  geom_line(
+    aes(x = date, y = total_observed_value,  group = total_observation_type),
+    color = "red",
+    alpha = 0.8) +
   geom_smooth(
-    aes(x = date, y = observed_value, color = borough), 
-        alpha = 0.8, se = F,
-    method = "gam") +
+    aes(x = date, y = total_observed_value, group = total_observation_type), 
+         color = "red",
+    alpha = 0.8, se = F) +
+  geom_line(
+    aes(x = date, y = AQI*38.64631477),
+      color = "blue",
+    alpha = 0.05) +
   geom_smooth(
-    aes(x = date, y = total_observed_value), 
-        alpha = 0.8, se = F) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %d", limits = as.Date(c("2020-03-01", "2020-12-01"))) +
-  coord_cartesian(ylim = c(0, 6000)) +
+    aes(x = date, y = AQI*38.64631477),
+     color = "blue",
+    alpha = 0.05) +
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b",
+    limits = as.Date(c("2020-03-01", "2020-12-01"))) +
+  scale_y_continuous(
+    name = "COVID Case Count",
+    sec.axis = sec_axis(~./38.64631477, name = "AQI Index")) +
+  coord_cartesian(ylim = c(0, NA)) +
   labs(
-    title = "Case Count per NYC Borough over Time",
+    title = "Case Count and AQI per NYC Borough over Time",
     x = "Week Number",
     y = "Value",
     caption = "P8105 Final Project")
 
-# Quick plot of covid 7 day avg with reference lines
-nyc_daily_borough_testing %>% 
-  filter(observation_type == c("case_count_7day_avg")) %>% 
-  group_by(date, borough, observation_type) %>% 
-  ggplot(aes(x = date, y = observed_value, color = borough)) + 
-  geom_line() +
-  geom_vline(xintercept = as.numeric(
-    as.Date(
-      c("2020-03-07","2020-03-22", "2020-08-08", "2020-10-01"))),  
-    linetype = 2) +
-  geom_text(
-    aes(x = as.Date("2020-03-07"),
-                label = c("State of Emergency Declared"), 
-        y = 1000), 
-    alpha = 0.5, colour = "red", angle = 90, vjust = -1, text = element_text(size = 6)) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %d", limits = as.Date(c("2020-03-01", "2020-12-01"))) +
-  coord_cartesian(ylim = c(0,2000)) +
+# per borough
+covid_aqi_borough_ggplot = 
+AQI_covid_master %>% 
+  filter(observation_type == c("case_count")) %>% 
+  filter(total_observation_type == c("case_count")) %>% 
+  group_by(date, borough) %>% 
+  ggplot(aes(x = date)) + 
+  geom_line(
+    aes(x = date, y = observed_value, color = borough),
+    alpha = 0.8) +
+  geom_smooth(
+    aes(x = date, y = observed_value, color = borough), 
+        alpha = 0.8, se = F,
+    method = "gam") +
+    scale_color_manual(values = c("Bronx" = "#005EFF", "Brooklyn" = "#0086C6", "Manhattan" = "#00AF8C", "Queens" = "#00D753", "Staten Island" = "#00FF19")) +
+  geom_line(
+    aes(x = date, y = IAQI_co*53.40336134, color = borough),
+    alpha = 0.05) +
+  geom_smooth(
+    aes(x = date, y = IAQI_co*53.40336134,  color = borough),
+    alpha = 0.05) +
+    scale_color_manual(values = c("Bronx" = "#FF0000", "Brooklyn" = "#FF3400", "Manhattan" = "#FF6800", "Queens" = "#FF9C00", "Staten Island" = "#FFD000")) +
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b",
+    limits = as.Date(c("2020-03-01", "2020-12-01"))) +
+  scale_y_continuous(
+    name = "COVID Case Count",
+    sec.axis = sec_axis(~./53.40336134, name = "AQI Index")) +
+  coord_cartesian(ylim = c(0, NA)) +
   labs(
-    title = "7 Day Case Count Average per NYC Borough over Time",
-    x = "Week Number",
+    title = "Case Count and AQI per NYC Borough over Time",
+    x = "Month",
     y = "Value",
     caption = "P8105 Final Project")
+
 
 ```
 
@@ -386,62 +412,85 @@ Column {data-width=500}
 ### COVID Cases and Air Quality Index
 
 ```{r plotly line plot 1, eval = FALSE}
+#create line formatting object
+line.fmt = list(dash = "solid", width = 1.5, color=NULL)
 
-#renderPlotly({
-#covid_air_ytd_joined %>% 
-#  filter(observation_type == c("case_count")) %>% 
-#  filter(total_observation_type == c("case_count")) %>% 
-#  group_by(date, borough) %>% 
-#  summarize(sum_cases = sum(observed_value)) %>% 
-#  plot_ly(x = ~date, y = ~sum_cases,  type = "scatter", color = ~borough, colors = "viridis")
-#})
+#create numeric date object for mgcv package's gam function (cannot take difftime objects)
+AQI_covid_master = 
+  AQI_covid_master %>% 
+  mutate(
+    ndate = as.numeric(date))
 
+# create gam smoothers for plotting manually, plot_ly needs them
+sp.gam.covid = gam(total_observed_value ~ s(ndate, bs = "cs"), data = AQI_covid_master, method = "GCV.Cp")
+sp.pred.covid = predict(sp.gam.covid, type="response", se.fit = TRUE)
+as.data.frame(sp.pred.covid)
 
+#create lines for AQI overlay
+sp.gam.aqi = gam(AQI ~ s(ndate, bs = "cs"), data = AQI_covid_master, method = "GCV.Cp")
+sp.pred.aqi = predict(sp.gam.aqi, type="response", se.fit = TRUE)
 
-covid_air_ytd_joined %>% 
+#create yaxis objects
+y1 <- list(
+  tickfont = list(color = "red"),
+  overlaying = "n",
+  side = "left",
+  title = "NYC COVID Case Count"
+)
+y2 <- list(
+  tickfont = list(color = "red"),
+  overlaying = "y",
+  side = "right",
+  title = "AQI Axis"
+)
+
+#plot_ly
+pp =
+AQI_covid_master %>% 
   filter(observation_type == c("case_count")) %>% 
   filter(total_observation_type == c("case_count")) %>% 
-  group_by(date, borough) %>% 
-  ggplot(aes(x = date)) + 
-  geom_line(
-    aes(x = date, y = observed_value, color = borough),
-    alpha = 0.8) +
-  geom_line(
-    aes(x = date, y = total_observed_value,  group = total_observation_type), 
-    alpha = 0.8) +
-  geom_smooth(
-    aes(x = date, y = observed_value, color = borough), 
-        alpha = 0.8, se = F,
-    method = "gam") +
-  geom_smooth(
-    aes(x = date, y = total_observed_value), 
-        alpha = 0.8, se = F) +
-  geom_line(
-    aes(x = date, y = total_observed_value,  group = total_observation_type),
-    alpha = 0.8) +
-  geom_line(
-    aes(x = date, y = AQI_Final*32.30644095, group = borough),
-    alpha = 0.05) +
-  geom_smooth(
-    aes(x = date, y = AQI_Final*32.30644095,  color = borough),
-    alpha = 0.05) +
-  scale_x_date(
-    date_breaks = "1 month",
-    date_labels = "%b %d",
-    limits = as.Date(c("2020-03-01", "2020-12-01"))) +
-  scale_y_continuous(
-    name = "COVID Case Count",
-    sec.axis = sec_axis(~./32.30644095, name = "AQI Index")) +
-  coord_cartesian(ylim = c(0, NA)) +
-  labs(
-    title = "Case Count and AQI per NYC Borough over Time",
-    x = "Week Number",
-    y = "Value",
-    caption = "P8105 Final Project")
+  plot_ly(x = ~date, y = ~total_observed_value, type = 'scatter', mode = "lines", name = "COVID Case Count") %>% #covid data
+  add_lines(x = ~date, y = ~sp.pred.covid$fit, name = "COVID Count GAM", line = list(color = "#005EFF", width=2), opacity = 0.5) %>% #covid gam
+  add_lines(x = ~date, y = ~AQI*38.64631477, name = "AQI Index", line = list(color = "#FF0000", width=2, yaxis2 = y2), opacity = 0.1) %>% #aqi data
+  add_lines(x = ~date, y = ~sp.pred.aqi$fit, name = "AQI Index GAM", line = list(color = "#FF6800", width=2), yaxis2 = y2) %>% #aqi GAM
+  layout(title = "Case Count and AQI per NYC Borough over Time",
+           yaxis = list(y1),
+           yaxis2 = list(y2),
+           xaxis = list(title = 'Month'))
+
+#gam doesn't fit well, let's try an alternative
+#ll.smooth = loess(total_observed_value ~ ndate, data = AQI_covid_master, span=0.75)
+#also not a good fit, let's try a cv'd model
+# rllt = supsmu(AQI_covid_master$date, AQI_covid_master$total_observed_value, span = "cv") ### this runs but does not print in the plot_ly, tibble issues.
+#must troubleshoot the model fit, and adding the second y-axis
+
 ```
 
 ```{r plotly line plot 2, eval = FALSE}
-
+AQI_covid_master %>% 
+  plot_ly(
+  x = ~date,
+  y = ~IAQI_co,
+  split = ~borough,
+  type = "scatter",
+  mode = "lines",
+  color = ~borough,
+  colors = "Oranges"
+  ) %>% 
+  add_lines(
+    x = ~date,
+    y = ~observed_value,
+    split = ~borough,
+    type = "scatter",
+    mode = "lines",
+    color = ~borough,
+    colors = "Blues", # Can't get these to show up in a different color palette!
+    yaxis = "y2",
+    inherit = FALSE) %>% 
+  layout(
+     yaxis = list(side = "left", title = "IAQI CO Score", showgrid = FALSE, zeroline = FALSE),
+     yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
+     )
 ```
 
 
