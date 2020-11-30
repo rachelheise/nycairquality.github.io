@@ -233,17 +233,6 @@ AQI_2019_and_2020 =
   )
 ```
 
-```{r nyc-wide covid data cleaning, include = FALSE}
-nyc_cases =
-  GET("https://data.cityofnewyork.us/resource/rc75-m7u3.csv") %>% # Reading in the data
-  content("parsed") %>% 
-  rename(date = date_of_interest) %>% # Renaming the date variable for simplicity
-  select(date, case_count) %>% # Only retaining date and case count for simplicity
-  mutate(
-    date = as.Date(date, tryFormats = c("%Y-%m-%d")) # as.Date() by default cannot convert POSIXct to date; no data lost
-  )
-```
-
 ```{r by borough covid data cleaning, cache = TRUE, include = FALSE}
 nyc_daily_borough_testing =
   read_csv(
@@ -478,8 +467,30 @@ AQI_covid_master %>%
 ```
 
 ```{r plotly line plot 2, eval = FALSE}
-ggplotly(covid_aqi_borough_ggplot)
-
+AQI_covid_master %>% 
+  plot_ly(
+  x = ~date,
+  y = ~IAQI_co,
+  split = ~borough,
+  type = "scatter",
+  mode = "lines",
+  color = ~borough,
+  colors = "Oranges"
+  ) %>% 
+  add_lines(
+    x = ~date,
+    y = ~observed_value,
+    split = ~borough,
+    type = "scatter",
+    mode = "lines",
+    color = ~borough,
+    colors = "Blues", # Can't get these to show up in a different color palette!
+    yaxis = "y2",
+    inherit = FALSE) %>% 
+  layout(
+     yaxis = list(side = "left", title = "IAQI CO Score", showgrid = FALSE, zeroline = FALSE),
+     yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
+     )
 ```
 
 
