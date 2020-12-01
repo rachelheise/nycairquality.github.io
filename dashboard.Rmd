@@ -278,12 +278,12 @@ nyc_daily_borough_testing =
   )
 ```
 
-```{r merge air quality and covid data}
+```{r merge air quality and covid data, echo = F}
 AQI_covid_master =
   left_join(nyc_daily_borough_testing, AQI_2019_and_2020, by = c("date", "borough"))
 ```
 
-```{r example covid line graphs, eval = FALSE}
+```{r example covid line graphs, include = FALSE}
 ##make ggplot objects for plotly render
 #overall
 covid_aqi_overall_ggplot = 
@@ -361,7 +361,7 @@ AQI_covid_master %>%
 
 ```
 
-```{r example air quality plots, eval = FALSE}
+```{r example air quality plots, eval = FALSE, include = F}
 air_quality %>% 
   ggplot(aes(x = date, y = median_co, color = borough)) + 
     geom_point(alpha = .2) +
@@ -402,12 +402,12 @@ AQI_combined_2020 %>%
   geom_smooth()
 ```
 
-Column {data-width=500}
------------------------------------------------------------------------
 
-### AQI and COVID Case Count Over Time
 
-```{r plotly line plot 1}
+
+AQI and COVID Case Count Over Time:
+===================================== 
+```{r plotly line plot 1, echo = F}
 #create line formatting object
 line.fmt = list(dash = "solid", width = 1.5, color=NULL)
 
@@ -457,13 +457,15 @@ AQI_covid_master %>%
 #also not a good fit, let's try a cv'd model
 # rllt = supsmu(AQI_covid_master$date, AQI_covid_master$total_observed_value, span = "cv") ### this runs but does not print in the plot_ly, tibble issues.
 #must troubleshoot the model fit, and adding the second y-axis
-pp
+renderPlotly({pp})
 ```
 
-### Carbon Monoxide (CO) IAQI Score by Borough and COVID Case Count Over Time
 
-```{r plotly line plot 2}
-AQI_covid_master %>% 
+
+Carbon Monoxide (CO) IAQI Score by Borough and COVID Case Count Over Time:
+===================================== 
+```{r plotly line plot 2, echo = F}
+renderPlotly({AQI_covid_master %>% 
   plot_ly(
   x = ~date,
   y = ~IAQI_co,
@@ -486,16 +488,14 @@ AQI_covid_master %>%
   layout(
      yaxis = list(side = "left", title = "IAQI CO Score", showgrid = FALSE, zeroline = FALSE),
      yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
-     )
+     )})
 ```
 
 
-Column {data-width=500}
------------------------------------------------------------------------
 
-### Air Quality Index by Borough
-
-```{r}
+AQI per Borough:
+===================================== 
+```{r echo = F}
 borough_coord = tibble("borough" = c("Bronx", "Manhattan", "Brooklyn", "Queens", "Staten Island"), "latitude" = c(40.8448, 40.7731, 40.6782, 40.7282, 40.5795), "longitude" = c(-73.8648, -73.9712, -73.9442, -73.7949, -74.1502))
 
 color_df = colorFactor(c("green", "yellow", "orange", "red"), domain = c("Good", "Moderate", "Unhealthy for Sensitive Populations", "Unhealthy"))
@@ -528,19 +528,16 @@ renderLeaflet({
 
 ```
 
-Column {data-width=200}
------------------------------------------------------------------------
-
 Here we can write some introductory text/explain our project.
 
-```{r input}
-renderUI({
+
+
+```{r input, echo = F}
  dateInput(
     "date",
     label = h3("Date input"),
     value = "2020-02-29", # Default value
     min = "2020-02-29", # Min value
     max = "2020-11-17") # Max value
-})
 # I put in these dates based on the covid dataset, but we can update as needed
 ```

@@ -3,7 +3,7 @@ output_dir: "."
 navbar:
   title: "Home"
   left:
-    - text: "Dashboard"
-      href: dashboard.html
+    - text: Dashboard
+      href: https://asingh100.shinyapps.io/dashboard/
 output:
   html_document
