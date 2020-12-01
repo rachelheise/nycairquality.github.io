@@ -16,6 +16,7 @@ library(data.table)
 library(shiny)
 library(plotly)
 library(mgcv)
+library(RColorBrewer)
 
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 options(
@@ -286,6 +287,8 @@ AQI_covid_master =
 ```{r example covid line graphs, include = FALSE}
 ##make ggplot objects for plotly render
 #overall
+builder_test = ggplot_build(covid_aqi_overall_ggplot)
+
 covid_aqi_overall_ggplot = 
 AQI_covid_master %>% 
   filter(observation_type == c("case_count")) %>% 
@@ -408,56 +411,63 @@ AQI_combined_2020 %>%
 AQI and COVID Case Count Over Time:
 ===================================== 
 ```{r plotly line plot 1, echo = F}
-#create line formatting object
-line.fmt = list(dash = "solid", width = 1.5, color=NULL)
-
+#GAM infrastructure
 #create numeric date object for mgcv package's gam function (cannot take difftime objects)
 AQI_covid_master = 
   AQI_covid_master %>% 
   mutate(
     ndate = as.numeric(date))
+# create GAM smoothers for plotting manually, plot_ly needs them
+sp.gam.covid = gam(total_observed_value ~ s(ndate, bs = "ad"), data = AQI_covid_master, method = "REML")
+sp.pred.covid = predict.gam(sp.gam.covid, se.fit = TRUE)
+#create GAM lines for AQI overlay
+sp.gam.aqi = gam(AQI ~ s(ndate, bs = "ad"), data = AQI_covid_master, method = "REML")
+sp.pred.aqi = predict.gam(sp.gam.aqi, se.fit = TRUE)
 
-# create gam smoothers for plotting manually, plot_ly needs them
-sp.gam.covid = gam(total_observed_value ~ s(ndate, bs = "cs"), data = AQI_covid_master, method = "GCV.Cp")
-sp.pred.covid = predict(sp.gam.covid, type="response", se.fit = TRUE)
-
-#create lines for AQI overlay
-sp.gam.aqi = gam(AQI ~ s(ndate, bs = "cs"), data = AQI_covid_master, method = "GCV.Cp")
-sp.pred.aqi = predict(sp.gam.aqi, type="response", se.fit = TRUE)
-
-#create yaxis objects
-y1 <- list(
-  tickfont = list(color = "red"),
-  overlaying = "n",
-  side = "left",
-  title = "NYC COVID Case Count"
-)
-y2 <- list(
-  tickfont = list(color = "red"),
-  overlaying = "y",
-  side = "right",
-  title = "AQI Axis"
-)
-
-#plot_ly
-pp =
-AQI_covid_master %>% 
+#plot_ly mine
+renderPlotly({
+  AQI_covid_master %>% 
   filter(observation_type == c("case_count")) %>% 
   filter(total_observation_type == c("case_count")) %>% 
-  plot_ly(x = ~date, y = ~total_observed_value, type = 'scatter', mode = "lines", name = "COVID Case Count") %>% #covid data
-  add_lines(x = ~date, y = ~sp.pred.covid$fit, name = "COVID Count GAM", line = list(color = "#005EFF", width=2), opacity = 0.5) %>% #covid gam
-  add_lines(x = ~date, y = ~AQI*38.64631477, name = "AQI Index", line = list(color = "#FF0000", width=2, yaxis2 = y2), opacity = 0.1) %>% #aqi data
-  add_lines(x = ~date, y = ~sp.pred.aqi$fit, name = "AQI Index GAM", line = list(color = "#FF6800", width=2), yaxis2 = y2) %>% #aqi GAM
-  layout(yaxis = list(y1),
-         yaxis2 = list(y2),
-         xaxis = list(title = 'Month'))
+  plot_ly() %>% 
+    add_lines(
+      x = ~date,
+      y = ~total_observed_value,
+      mode = "lines",
+      name = "COVID Case Count",
+      colors = "Blues",
+      opacity = 0.8) %>%  #covid data
+    add_lines(
+      x = ~date,
+      y = ~AQI*38.64631477,
+      name = "AQI Index",
+      mode = "lines",
+      colors = "Oranges",
+      opacity = 0.3,
+      yaxis2 = "y2") %>% #aqi data
+    add_lines(
+      x = ~date,
+      y = ~sp.pred.covid$fit,
+      name = "COVID Count GAM",
+      type = 'scatter',
+      mode = "lines",
+      color = ~total_observation_type,
+      colors = "Blues",
+      opacity = 1) %>% #covid gam
+    add_lines(
+      x = ~date,
+      y = ~sp.pred.aqi$fit,
+      name = "AQI Index GAM",
+      type = 'scatter',
+      mode = "lines",
+      colors = "Oranges",
+      yaxis2 = "y2") %>% #aqi GAM
+    layout(
+     yaxis = list(side = "left", title = "NYC COVID-19 Case Count"),
+     yaxis2 = list(side = "right", overlaying = "y1", title = "AQI Index", showgrid = FALSE, zeroline = FALSE)
+     )
+})
 
-#gam doesn't fit well, let's try an alternative
-#ll.smooth = loess(total_observed_value ~ ndate, data = AQI_covid_master, span=0.75)
-#also not a good fit, let's try a cv'd model
-# rllt = supsmu(AQI_covid_master$date, AQI_covid_master$total_observed_value, span = "cv") ### this runs but does not print in the plot_ly, tibble issues.
-#must troubleshoot the model fit, and adding the second y-axis
-renderPlotly({pp})
 ```
 
 
@@ -465,7 +475,8 @@ renderPlotly({pp})
 Carbon Monoxide (CO) IAQI Score by Borough and COVID Case Count Over Time:
 ===================================== 
 ```{r plotly line plot 2, echo = F}
-renderPlotly({AQI_covid_master %>% 
+renderPlotly({
+  AQI_covid_master %>% 
   plot_ly(
   x = ~date,
   y = ~IAQI_co,
@@ -488,7 +499,8 @@ renderPlotly({AQI_covid_master %>%
   layout(
      yaxis = list(side = "left", title = "IAQI CO Score", showgrid = FALSE, zeroline = FALSE),
      yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
-     )})
+     )
+  })
 ```
 
 
