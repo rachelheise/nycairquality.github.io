@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 name: "P8105 Final Project -- NYC Air Quality"
 output_dir: "."
 navbar:
@@ -7,4 +8,14 @@ navbar:
       href: https://asingh100.shinyapps.io/dashboard/
     
 output:
+=======
+name: "P8105 Final Project -- NYC Air Quality"
+output_dir: "."
+navbar:
+  title: "Home"
+  left:
+    - text: Dashboard
+      href: https://asingh100.shinyapps.io/dashboard/
+output:
+>>>>>>> a11aef1086f8f6a7667043e9fde971f316f61d79
   html_document
