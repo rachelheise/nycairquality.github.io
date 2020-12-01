@@ -460,33 +460,36 @@ AQI_covid_master %>%
 pp
 ```
 
-### Carbon Monoxide (CO) IAQI Score by Borough and COVID Case Count Over Time
+### Carbon Monoxide (CO) IAQI by Borough and NYC COVID Case Count Over Time
 
 ```{r plotly line plot 2}
-AQI_covid_master %>% 
+AQI_covid_master %>%
+  mutate(borough_titles = str_c("CO IAQI ", borough)) %>% 
+  filter(total_observation_type == "case_count") %>% 
   plot_ly(
   x = ~date,
   y = ~IAQI_co,
-  split = ~borough,
+  split = ~borough_titles,
   type = "scatter",
   mode = "lines",
-  color = ~borough,
+  color = ~borough_titles,
   colors = "Oranges"
   ) %>% 
-  add_lines(
+  add_trace(
     x = ~date,
-    y = ~observed_value,
-    split = ~borough,
+    y = ~total_observed_value,
     type = "scatter",
     mode = "lines",
-    color = ~borough,
-    colors = "Blues", # Can't get these to show up in a different color palette!
+    line = list(color = "#005EFF"),
     yaxis = "y2",
-    inherit = FALSE) %>% 
+    inherit = FALSE,
+    name = "NYC COVID Case Count"
+    ) %>%
   layout(
-     yaxis = list(side = "left", title = "IAQI CO Score", showgrid = FALSE, zeroline = FALSE),
-     yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
-     )
+    xaxis = list(title = "Date"),
+    yaxis = list(side = "left", title = "CO IAQI", showgrid = FALSE, zeroline = FALSE),
+    yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
+    )
 ```
 
 
