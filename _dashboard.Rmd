@@ -331,7 +331,11 @@ Carbon Monoxide (CO) IAQI by Borough and NYC COVID Case Count Over Time
 ```{r plotly line plot 2, echo = F}
 renderPlotly({
   AQI_covid_master %>%
-    mutate(borough_titles = str_c("CO IAQI ", borough)) %>% 
+    mutate(
+    text_label_3 = str_c("Date: ", date, "\nBorough: ", borough, "\nAQI Index Value: ", AQI),
+    text_label_4 = str_c("Date: ", date, "\nCOVID Case Count: ", total_observed_value)
+    ) %>% 
+    mutate(borough_titles = str_c("Carbon Monoxide IAQI ", borough)) %>% 
     filter(total_observation_type == "case_count") %>% 
     plot_ly(
     x = ~date,
@@ -340,6 +344,7 @@ renderPlotly({
     type = "scatter",
     mode = "lines",
     opacity = 0.3,
+    text = ~text_label_3,
     color = ~borough_titles,
     colors = "Oranges"
     ) %>% 
@@ -350,6 +355,7 @@ renderPlotly({
       mode = "lines",
       line = list(color = "#005EFF"),
       opacity = 0.8,
+      text = ~text_label_4,
       yaxis = "y2",
       inherit = FALSE,
       name = "NYC COVID Case Count"
