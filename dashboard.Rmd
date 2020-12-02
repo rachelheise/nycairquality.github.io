@@ -287,8 +287,6 @@ AQI_covid_master =
 ```{r example covid line graphs, include = FALSE}
 ##make ggplot objects for plotly render
 #overall
-builder_test = ggplot_build(covid_aqi_overall_ggplot)
-
 covid_aqi_overall_ggplot = 
 AQI_covid_master %>% 
   filter(observation_type == c("case_count")) %>% 
