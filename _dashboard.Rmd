@@ -17,6 +17,7 @@ library(shiny)
 library(plotly)
 library(mgcv)
 library(RColorBrewer)
+library(zoo)
 
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 options(
@@ -280,10 +281,32 @@ nyc_daily_borough_testing =
   )
 ```
 
+
 ```{r merge air quality and covid data, echo = F}
 AQI_covid_master =
   left_join(nyc_daily_borough_testing, AQI_2019_and_2020, by = c("date", "borough"))
 ```
+
+```{r}
+total_AQI = AQI_covid_master %>% 
+  select(date, borough, AQI) %>% 
+  distinct(date, borough, .keep_all = TRUE) %>% 
+  group_by(date) %>% 
+  mutate(avg_AQI = mean(AQI)) %>% 
+  ungroup() %>% 
+  select(date, avg_AQI) %>% 
+  distinct(date, .keep_all = TRUE) %>% 
+  arrange(date) %>% 
+  mutate(AQI_7day_avg = zoo::rollmean(avg_AQI, k = 7, fill = NA))
+```
+
+```{r}
+AQI_covid_master= AQI_covid_master %>% 
+  left_join(total_AQI, by = "date")
+```
+
+ 
+
 
 AQI and COVID Case Count Over Time
 ===================================== 
