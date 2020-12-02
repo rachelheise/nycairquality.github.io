@@ -301,11 +301,21 @@ total_AQI = AQI_covid_master %>%
 ```
 
 ```{r}
-AQI_covid_master= AQI_covid_master %>% 
-  left_join(total_AQI, by = "date")
+AQI_by_borough = AQI_covid_master %>% 
+  select(date, borough, IAQI_co) %>% 
+  distinct(date, borough, .keep_all = TRUE) %>% 
+  group_by(borough) %>% 
+  arrange(date) %>% 
+  mutate(co_borough_7day_avg = zoo::rollmean(IAQI_co, k = 7, fill = NA))
+  
 ```
 
- 
+
+```{r}
+AQI_covid_master = AQI_covid_master %>% 
+  left_join(total_AQI, by = "date") %>% 
+  left_join(AQI_by_borough, by = c("date", "borough"))
+```
 
 
 AQI and COVID Case Count Over Time
@@ -332,8 +342,8 @@ renderPlotly({
       opacity = 0.8) %>%  #covid data
     add_lines(
       x = ~date,
-      y = ~AQI*38.64631477,
-      name = "AQI Index",
+      y = ~AQI_7day_avg*38.64631477,
+      name = "AQI Index (7 Day Rolling Avg.)",
       mode = "lines",
       colors = "Oranges",
       opacity = 0.3,
@@ -355,7 +365,7 @@ renderPlotly({
     filter(total_observation_type == "case_count") %>% 
     plot_ly(
     x = ~date,
-    y = ~IAQI_co,
+    y = ~co_borough_7day_avg,
     split = ~borough_titles,
     type = "scatter",
     mode = "lines",
@@ -374,7 +384,7 @@ renderPlotly({
       ) %>%
     layout(
       xaxis = list(title = "Date"),
-      yaxis = list(side = "left", title = "CO IAQI", showgrid = FALSE, zeroline = FALSE),
+      yaxis = list(side = "left", title = "CO IAQI (7 day avg.)", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
       )
   })
