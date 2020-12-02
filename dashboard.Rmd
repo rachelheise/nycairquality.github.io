@@ -442,24 +442,7 @@ renderPlotly({
       mode = "lines",
       colors = "Oranges",
       opacity = 0.3,
-      yaxis2 = "y2") %>% #aqi data
-    add_lines(
-      x = ~date,
-      y = ~sp.pred.covid$fit,
-      name = "COVID Count GAM",
-      type = 'scatter',
-      mode = "lines",
-      color = ~total_observation_type,
-      colors = "Blues",
-      opacity = 1) %>% #covid gam
-    add_lines(
-      x = ~date,
-      y = ~sp.pred.aqi$fit,
-      name = "AQI Index GAM",
-      type = 'scatter',
-      mode = "lines",
-      colors = "Oranges",
-      yaxis2 = "y2") %>% #aqi GAM
+      yaxis2 = "y2") %>% 
     layout(
      yaxis = list(side = "left", title = "NYC COVID-19 Case Count"),
      yaxis2 = list(side = "right", overlaying = "y1", title = "AQI Index", showgrid = FALSE, zeroline = FALSE)
@@ -467,7 +450,6 @@ renderPlotly({
 })
 
 ```
-
 
 
 Carbon Monoxide (CO) IAQI Score by Borough and COVID Case Count Over Time:
