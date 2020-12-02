@@ -288,39 +288,36 @@ AQI_covid_master =
 AQI and COVID Case Count Over Time
 ===================================== 
 ```{r plotly line plot 1, echo = F}
-#create numeric date object for mgcv package's gam function (cannot take difftime objects)
-AQI_covid_master = 
-  AQI_covid_master %>% 
-  mutate(
-    ndate = as.numeric(date))
-
 #plot_ly 
 renderPlotly({
   AQI_covid_master %>% 
   filter(observation_type == c("case_count")) %>% 
   filter(total_observation_type == c("case_count")) %>% 
-  plot_ly() %>% 
-    add_lines(
-      x = ~date,
-      y = ~total_observed_value,
-      mode = "lines",
-      name = "COVID Case Count",
-      colors = "Blues",
-      opacity = 0.8) %>%  #covid data
-    add_lines(
+  plot_ly(
       x = ~date,
       y = ~AQI*38.64631477,
       name = "AQI Index",
+      type = "scatter",
       mode = "lines",
-      colors = "Oranges",
       opacity = 0.3,
-      yaxis2 = "y2") %>% 
+      line = list(color = "#FFA500")
+      ) %>%
+    add_trace(
+      x = ~date,
+      y = ~total_observed_value,
+      type = "scatter",
+      mode = "lines",
+      name = "COVID Case Count",
+      line = list(color = "#005EFF"),
+      opacity = 0.8,
+      yaxis = "y2",
+      inherit = FALSE) %>%  #covid data
     layout(
-     yaxis = list(side = "left", title = "NYC COVID-19 Case Count"),
-     yaxis2 = list(side = "right", overlaying = "y1", title = "AQI Index", showgrid = FALSE, zeroline = FALSE)
+      xaxis = list(title = "Date"),
+      yaxis = list(side = "left", title = "AQI Index", showgrid = FALSE, zeroline = FALSE),
+      yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
      )
 })
-
 ```
 
 Carbon Monoxide (CO) IAQI by Borough and NYC COVID Case Count Over Time
@@ -336,6 +333,7 @@ renderPlotly({
     split = ~borough_titles,
     type = "scatter",
     mode = "lines",
+    opacity = 0.3,
     color = ~borough_titles,
     colors = "Oranges"
     ) %>% 
@@ -345,13 +343,14 @@ renderPlotly({
       type = "scatter",
       mode = "lines",
       line = list(color = "#005EFF"),
+      opacity = 0.8,
       yaxis = "y2",
       inherit = FALSE,
       name = "NYC COVID Case Count"
       ) %>%
     layout(
       xaxis = list(title = "Date"),
-      yaxis = list(side = "left", title = "CO IAQI", showgrid = FALSE, zeroline = FALSE),
+      yaxis = list(side = "left", title = "Carbon Monoxide Index", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
       )
   })
