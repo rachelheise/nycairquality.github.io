@@ -291,6 +291,10 @@ AQI and COVID Case Count Over Time
 #plot_ly 
 renderPlotly({
   AQI_covid_master %>% 
+  mutate(
+    text_label_1 = str_c("Date: ", date, "\nAQI Index Value: ", AQI),
+    text_label_2 = str_c("Date: ", date, "\nCOVID Case Count: ", observed_value)
+    ) %>% 
   filter(observation_type == c("case_count")) %>% 
   filter(total_observation_type == c("case_count")) %>% 
   plot_ly(
@@ -300,6 +304,7 @@ renderPlotly({
       type = "scatter",
       mode = "lines",
       opacity = 0.3,
+      text = ~text_label_1,
       line = list(color = "#FFA500")
       ) %>%
     add_trace(
@@ -310,6 +315,7 @@ renderPlotly({
       name = "COVID Case Count",
       line = list(color = "#005EFF"),
       opacity = 0.8,
+      text = ~text_label_2,
       yaxis = "y2",
       inherit = FALSE) %>%  #covid data
     layout(
