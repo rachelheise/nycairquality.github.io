@@ -1,5 +1,5 @@
 ---
-title: "P8105 Final Project -- NYC Air Quality"
+title: "NYC Air Quality During the COVID-19 Pandemic"
 ---
 
 Welcome to the website for the P8105 Final Project by Rachel Heise, Emil Hafeez, Fiona Ehrich, and Anmol Singh!

@@ -1,9 +1,23 @@
-name: "P8105 Final Project -- NYC Air Quality"
+name: "NYC Air Quality During the COVID-19 Pandemic"
 output_dir: "."
 navbar:
   title: "Home"
   left:
     - text: Dashboard
       href: https://asingh100.shinyapps.io/dashboard/
+      icon: fa-chart-line
+    - text: Report
+      icon: fa-file-text-o fa-lg
+      href: report.html
+    - text: Process
+      icon: fas fa-cog
+      href: process.html
+    - text: Screencast
+      href: screencast.html
+      icon: fa-video
+  right:
+    - icon: fa-github fa-lg
+      href: https://github.com/rachelheise/nycairquality.github.io.git
 output:
-  html_document
+  html_document:
+    theme: cosmo
