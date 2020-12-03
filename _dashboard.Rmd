@@ -311,7 +311,7 @@ vline <- function(x = 0, color = "red") {
     yref = "paper",
     x0 = x, 
     x1 = x, 
-    line = list(color = color, opacity = 0.75)
+    line = list(color = color, opacity = 0.75, dash = "dash", width = 1)
   )
 }
 ```
@@ -340,7 +340,7 @@ renderPlotly({
       opacity = 0.8,
       text = ~text_label_1,
       line = list(color = "#FFA500"),
-      hoverinfo="text"
+      hoverinfo = "text"
       ) %>%
     add_trace(
       x = ~date,
@@ -353,7 +353,7 @@ renderPlotly({
       text = ~text_label_2,
       yaxis = "y2",
       inherit = FALSE,
-      hoverinfo="text") %>%  #covid data
+      hoverinfo = "text") %>%  #covid data
     layout(
       shapes = list(vline("2020-03-07"), vline("2020-03-22"), vline("2020-08-08"), vline("2020-10-01")),
       xaxis = list(title = "Date"),
@@ -398,7 +398,7 @@ renderPlotly({
       inherit = FALSE,
       name = "NYC COVID Case Count",
       hoverinfo = "text"
-      ) %>%
+      ) %>% 
     layout(
       shapes = list(vline("2020-03-07"), vline("2020-03-22"), vline("2020-08-08"), vline("2020-10-01")),
       xaxis = list(title = "Date"),
