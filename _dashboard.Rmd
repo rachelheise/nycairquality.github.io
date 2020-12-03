@@ -17,6 +17,7 @@ library(plotly)
 library(mgcv)
 library(RColorBrewer)
 library(zoo)
+library(lubridate)
 
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 options(
@@ -303,6 +304,42 @@ AQI_covid_master = AQI_covid_master %>%
 ```
 
 
+```{r}
+AQI_2019 = AQI_2019 %>% 
+  select(date, borough, AQI) %>% 
+  distinct(date, borough, .keep_all = TRUE) %>% 
+  group_by(date) %>% 
+  mutate(avg_AQI = mean(AQI)) %>% 
+  ungroup() %>% 
+  select(date, avg_AQI) %>% 
+  distinct(date, .keep_all = TRUE) %>% 
+  separate(date, into = c("year","month","day"), sep = "-") %>% 
+  mutate(avg_AQI_2019 = avg_AQI) %>% 
+  select(-avg_AQI)
+
+AQI_2020 = AQI_2020 %>% 
+  select(date, borough, AQI) %>% 
+  distinct(date, borough, .keep_all = TRUE) %>% 
+  group_by(date) %>% 
+  mutate(avg_AQI = mean(AQI)) %>% 
+  ungroup() %>% 
+  select(date, avg_AQI) %>% 
+  distinct(date, .keep_all = TRUE) %>% 
+  separate(date, into = c("year","month","day"), sep = "-")
+  
+AQI_dif = left_join(AQI_2019, AQI_2020, by = c("month", "day")) %>% 
+  mutate(percent_dif_AQI = ((avg_AQI - avg_AQI_2019)*100/avg_AQI_2019)) %>% 
+  mutate(year = year.y) %>% 
+  select(year, month, day, percent_dif_AQI) %>% 
+  unite("date", year:day, sep = "-") %>% 
+  mutate(date = as.Date(date))
+
+
+AQI_covid_master = left_join(AQI_covid_master, AQI_dif, by = "date")
+
+```
+
+
 AQI and COVID Case Count Over Time
 ===================================== 
 ```{r plotly line plot 1, echo = F}
@@ -317,7 +354,7 @@ renderPlotly({
   filter(total_observation_type == c("case_count")) %>% 
   plot_ly(
       x = ~date,
-      y = ~AQI_7day_avg*38.64631477,
+      y = ~percent_dif_AQI,
       name = "AQI Index (7 Day Rolling Avg.)",
       type = "scatter",
       mode = "lines",
