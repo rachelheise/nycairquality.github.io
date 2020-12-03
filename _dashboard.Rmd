@@ -326,7 +326,7 @@ AQI and COVID Case Count Over Time
 renderPlotly({
   AQI_covid_master %>% 
   mutate(
-    text_label_1 = str_c("Date: ", date, "\nAQI Index Value: ", AQI),
+    text_label_1 = str_c("Date: ", date, "\nAQI Index Value: ", round(AQI, 2)),
     text_label_2 = str_c("Date: ", date, "\nCOVID Case Count: ", observed_value)
     ) %>% 
   filter(observation_type == c("case_count")) %>% 
@@ -367,7 +367,7 @@ Carbon Monoxide (CO) IAQI by Borough and NYC COVID Case Count Over Time
 renderPlotly({
   AQI_covid_master %>%
     mutate(
-    text_label_3 = str_c("Date: ", date, "\nBorough: ", borough, "\nAQI Index Value: ", AQI),
+    text_label_3 = str_c("Date: ", date, "\nBorough: ", borough, "\nAQI Index Value: ", round(AQI, 2)),
     text_label_4 = str_c("Date: ", date, "\nCOVID Case Count: ", total_observed_value)
     ) %>% 
     mutate(borough_titles = str_c("Carbon Monoxide IAQI ", borough)) %>% 
