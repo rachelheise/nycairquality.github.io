@@ -378,7 +378,7 @@ renderPlotly({
     split = ~borough_titles,
     type = "scatter",
     mode = "lines",
-    opacity = 0.8,
+    opacity = 0.6,
     text = ~text_label_3,
     color = ~borough_titles,
     colors = "Oranges"
