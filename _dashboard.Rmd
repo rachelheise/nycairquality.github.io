@@ -356,7 +356,7 @@ renderPlotly({
       shapes = list(vline("2020-03-07"), vline("2020-03-22"), vline("2020-08-08"), vline("2020-10-01")),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "AQI Index (7 day avg)", showgrid = FALSE, zeroline = FALSE),
-      yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
+      yaxis2 = list(side = "right", overlaying = "y", title = "Case Count (Persons)", showgrid = FALSE, zeroline = FALSE)
      )
 })
 ```
@@ -399,7 +399,7 @@ renderPlotly({
       shapes = list(vline("2020-03-07"), vline("2020-03-22"), vline("2020-08-08"), vline("2020-10-01")),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "CO IAQI (7 day avg.)", showgrid = FALSE, zeroline = FALSE),
-      yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
+      yaxis2 = list(side = "right", overlaying = "y", title = "Case Count (Persons)", showgrid = FALSE, zeroline = FALSE)
       )
   })
 ```
