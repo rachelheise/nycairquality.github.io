@@ -327,12 +327,18 @@ AQI_2020 = AQI_2020 %>%
   distinct(date, .keep_all = TRUE) %>% 
   separate(date, into = c("year","month","day"), sep = "-")
   
-AQI_dif = left_join(AQI_2019, AQI_2020, by = c("month", "day")) %>% 
+AQI_dif = right_join(AQI_2019, AQI_2020, by = c("month", "day")) %>% 
+  drop_na(avg_AQI) %>% 
+  filter(year.x == 2019,
+         year.y == 2020) %>% 
   mutate(percent_dif_AQI = ((avg_AQI - avg_AQI_2019)*100/avg_AQI_2019)) %>% 
   mutate(year = year.y) %>% 
   select(year, month, day, percent_dif_AQI) %>% 
   unite("date", year:day, sep = "-") %>% 
-  mutate(date = as.Date(date))
+  mutate(date = as.Date(date)) %>% 
+  arrange(date) %>% 
+  mutate(aqi_dif_7day_avg = zoo::rollmean(percent_dif_AQI, k = 7, fill = NA))
+
 
 
 AQI_covid_master = left_join(AQI_covid_master, AQI_dif, by = "date")
@@ -354,8 +360,8 @@ renderPlotly({
   filter(total_observation_type == c("case_count")) %>% 
   plot_ly(
       x = ~date,
-      y = ~percent_dif_AQI,
-      name = "AQI Index (7 Day Rolling Avg.)",
+      y = ~aqi_dif_7day_avg,
+      name = "AQI % Diff. from 2019 (7 Day Rolling Avg.)",
       type = "scatter",
       mode = "lines",
       opacity = 0.3,
@@ -375,7 +381,7 @@ renderPlotly({
       inherit = FALSE) %>%  #covid data
     layout(
       xaxis = list(title = "Date"),
-      yaxis = list(side = "left", title = "AQI Index (7 day avg)", showgrid = FALSE, zeroline = FALSE),
+      yaxis = list(side = "left", title = "AQI Percent Difference from 2019 (7 Day Rolling Avg.)", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
      )
 })
