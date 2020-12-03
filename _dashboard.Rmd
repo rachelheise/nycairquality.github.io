@@ -337,7 +337,7 @@ renderPlotly({
       name = "AQI Index (7 Day Rolling Avg.)",
       type = "scatter",
       mode = "lines",
-      opacity = 0.3,
+      opacity = 0.8,
       text = ~text_label_1,
       line = list(color = "#FFA500")
       ) %>%
@@ -348,7 +348,7 @@ renderPlotly({
       mode = "lines",
       name = "COVID Case Count",
       line = list(color = "#005EFF"),
-      opacity = 0.8,
+      opacity = 1,
       text = ~text_label_2,
       yaxis = "y2",
       inherit = FALSE) %>%  #covid data
@@ -378,7 +378,7 @@ renderPlotly({
     split = ~borough_titles,
     type = "scatter",
     mode = "lines",
-    opacity = 0.3,
+    opacity = 0.8,
     text = ~text_label_3,
     color = ~borough_titles,
     colors = "Oranges"
@@ -389,7 +389,7 @@ renderPlotly({
       type = "scatter",
       mode = "lines",
       line = list(color = "#005EFF"),
-      opacity = 0.8,
+      opacity = 1,
       text = ~text_label_4,
       yaxis = "y2",
       inherit = FALSE,
