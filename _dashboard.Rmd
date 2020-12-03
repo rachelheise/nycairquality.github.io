@@ -278,6 +278,19 @@ nyc_daily_borough_testing =
       date == "2020-08-08" ~ "TRUE",
       date == "2020-10-01" ~ "TRUE")
   )
+
+vline <- function(x = 0, color = "red") {
+  list(
+    type = "line", 
+    y0 = 0, 
+    y1 = 0.9, 
+    yref = "paper",
+    x0 = x, 
+    x1 = x, 
+    line = list(color = color, opacity = 0.75)
+  )
+}
+
 ```
 
 ```{r merge air quality and covid data, echo = F}
@@ -317,8 +330,9 @@ renderPlotly({
       opacity = 0.8,
       text = ~text_label_2,
       yaxis = "y2",
-      inherit = FALSE) %>%  #covid data
+      inherit = FALSE) %>%
     layout(
+      shapes = list(vline("2020-03-07"), vline("2020-03-22"), vline("2020-08-08"), vline("2020-10-01")),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "AQI Index", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
@@ -361,6 +375,7 @@ renderPlotly({
       name = "NYC COVID Case Count"
       ) %>%
     layout(
+      shapes = list(vline("2020-03-07"), vline("2020-03-22"), vline("2020-08-08"), vline("2020-10-01")),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "Carbon Monoxide Index", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
