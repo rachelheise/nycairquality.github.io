@@ -1,5 +1,358 @@
 ---
 title: "Process"
+output: html_document
 ---
 
-[placeholder]
+
+**Exploratory Analysis for AQI in 2019 and 2020:**
+
+For the AQI variable we obtained the data from the Air Quality Open Data Platform and filtered the data to only include information about New York City. We then looked online and found out that the EPA actually reports the Air Quality of a specific place by using the Air Quality Index which is calculated by using a piecewise linear function for each pollutant and then taking the maximum value of each pollutant's AQI value to calculate the overall AQI value. The code we implemented to do this is shown below.
+
+```{r 2020 air quality data cleaning}
+# Data import and cleaning
+library(tidyverse)
+library(data.table)
+
+AQI_2020 = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
+  janitor::clean_names() %>% 
+  filter(country == "US") %>%
+  filter(city == "Brooklyn" | city == "Queens" | city == "The Bronx" | city == "Staten Island" | city == "Manhattan") %>%
+  mutate(borough = city) %>%
+  select(-c(city, country)) %>%
+  pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
+  select(date, borough, median_pm25, median_o3, median_co, median_no2)
+
+# Write functions that calculate the individual AQI (IAQI) for each individual pollutant
+
+IAQI_formula_o3 = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    AQI_o3 = 0
+  }
+  
+  else if (AQI <= 54 && AQI >= 0 ) {
+    IAQI_o3 = (50/54)*(AQI - 0) + 0
+  }
+  
+  else if (AQI <= 70 && AQI > 54 ) {
+    IAQI_o3 = (50/22)*(AQI - 55) + 51
+  }
+  
+  else if (AQI <= 85 && AQI > 70) {
+    IAQI_o3 = (50/14)*(AQI - 70) + 101
+  }
+  
+  else if (AQI <= 105 && AQI > 85 ) {
+    IAQI_o3 = (50/19)*(AQI - 86) + 151
+  }
+  
+  else if (AQI <= 200 && AQI > 105 ) {
+    IAQI_o3 = (99/94)*(AQI - 106) + 201
+  }
+  
+  else if (AQI <= 404 && AQI > 204) {
+    IAQI_o3 = (99/199)*(AQI - 205) + 201
+  }
+  
+  else{
+    IAQI_o3 = (199/199)*(AQI - 405) + 301
+  }
+}
+
+IAQI_formula_pm25 = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    IAQI_o3 = 0
+  }
+  
+  else if (AQI <= 12 && AQI >= 0 ) {
+    IAQI_pm25 = (50/12)*(AQI - 0) + 0
+  }
+  
+  else if (AQI <= 35.4 && AQI >= 12.1 ) {
+    IAQI_pm25 = (50/23.3)*(AQI - 12.1) + 51
+  }
+  
+  else if (AQI <= 55.4 && AQI >= 35.5 ) {
+    IAQI_pm25 = (50/19.9)*(AQI - 35.5) + 101
+  }
+  
+  else if (AQI <= 150.4 && AQI >= 55.5 ) {
+    IAQI_pm25 = (50/94.9)*(AQI - 55.5) + 151
+  }
+  
+  else{
+    IAQI_pm25 = (99/99.9)*(AQI - 150.5) + 201
+  }
+}
+
+IAQI_formula_co = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    IAQI_o3 = 0
+  }
+  
+  else if (AQI <= 4.4 && AQI >= 0) {
+    IAQI_co = (50/4.4)*(AQI - 0) + 0
+  }
+  
+  else if (AQI <= 9.4 && AQI >= 4.5 ) {
+    IAQI_co = (50/4.9)*(AQI - 4.5) + 51
+  }
+  
+  else{
+    IAQI_co = (199/19.9)*(AQI - 30.5) + 301
+  }
+}
+
+IAQI_formula_no2 = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    IAQI_o3 = 0
+  }
+  
+  else if (AQI <= 53 && AQI >= 0 ) {
+    IAQI_no2 = (50/53)*(AQI - 0) + 0
+  }
+  
+  else if (AQI <= 100 && AQI >= 54 ) {
+    IAQI_no2 = (50/46)*(AQI - 54) + 51
+  }
+  
+  else{
+    IAQI_no2 = (50/259)*(AQI - 101) + 101
+  }
+}
+
+# Generate IAQIs, determine AQI and AQI category based on max IAQI per day
+
+AQI_2020 =
+  AQI_2020 %>% 
+  mutate(
+    IAQI_o3 = map(median_o3, IAQI_formula_o3),
+    IAQI_pm25 = map(median_pm25, IAQI_formula_pm25),
+    IAQI_co = map(median_co, IAQI_formula_co),
+    IAQI_no2 = map(median_no2, IAQI_formula_no2)
+    ) %>% 
+  rowwise() %>% 
+  mutate(
+    AQI = max(IAQI_o3, IAQI_pm25, IAQI_co, IAQI_no2, na.rm = TRUE), # Taking max of the individual AQI scores
+    AQI_category =
+      if_else(
+        AQI <= 50 & AQI >= 0,
+        "Good",
+        if_else(
+          AQI <= 100 & AQI > 50,
+          "Moderate",
+          if_else(
+            AQI <= 150 & AQI > 100,
+            "Unhealthy for Sensitive Populations",
+            "Unhealthy")
+        )
+      )
+  )
+```
+
+```{r 2019 air quality data cleaning, include = FALSE}
+# Data import and cleaning
+
+AQI_2019 =
+  tibble(
+    path = list.files("./data/AQI_data_2019") # Listing all file names
+    ) %>% 
+  mutate(
+    path = str_c("./data/AQI_data_2019/", path), # Completing the paths
+    data = map(path, fread) # Reading the data for each path
+    ) %>% 
+  unnest(data) %>% 
+  janitor::clean_names() %>% 
+  filter(country == "US") %>%
+  filter(city == "Brooklyn" | city == "Queens" | city == "The Bronx" | city == "Staten Island" | city == "Manhattan") %>%
+  mutate(borough = city) %>%
+  select(-c(city, country)) %>%
+  pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
+  select(date, borough, median_pm25, median_o3, median_co, median_no2)
+
+# Generate IAQIs, determine AQI and AQI category based on max IAQI per day
+
+AQI_2019 =
+  AQI_2019 %>% 
+  mutate(
+    IAQI_o3 = map(median_o3, IAQI_formula_o3),
+    IAQI_pm25 = map(median_pm25, IAQI_formula_pm25),
+    IAQI_co = map(median_co, IAQI_formula_co),
+    IAQI_no2 = map(median_no2, IAQI_formula_no2)
+    ) %>% 
+  rowwise() %>% 
+  mutate(
+    AQI = max(IAQI_o3, IAQI_pm25, IAQI_co, IAQI_no2, na.rm = TRUE), # Taking max of the individual AQI scores
+    AQI_category =
+      if_else(
+        AQI <= 50 & AQI >= 0,
+        "Good",
+        if_else(
+          AQI <= 100 & AQI > 50,
+          "Moderate",
+          if_else(
+            AQI <= 150 & AQI > 100,
+            "Unhealthy for Sensitive Populations",
+            "Unhealthy")
+        )
+      )
+  )
+```
+
+
+After computing the AQI's for the 2019 and 2020 data we then merged the two data sets to try to compare the two years to see if there was any significant changes in Air Quality between 2019 (when COVID had not hit yet) versus in 2020 (during the time of COVID).
+
+```{r merge 2019 and 2020 air quality data}
+AQI_2019_and_2020 =
+  rbind(AQI_2019, AQI_2020) %>% 
+  as_tibble() %>% 
+  mutate(
+    date = as.Date(date, tryFormats = c("%Y-%m-%d")),
+    borough = recode(borough, "The Bronx" = "Bronx"),
+    IAQI_o3 = unlist(IAQI_o3),
+    IAQI_pm25 = unlist(IAQI_pm25),
+    IAQI_co = unlist(IAQI_co),
+    IAQI_no2 = unlist(IAQI_no2)
+  )
+```
+
+**Exploratory Analysis and Data Cleaning for COVID Data Set:**
+
+We then examined the COVID cases data set and cleaned the data to make the data more readable. This included changing the format of the date variable as well as pivoting the data longer so we can see COVID case trends per borough. We also added in a variable that indicates dates in which NY Government COVID policies were enacted. The code we used to do this is shown below.
+
+```{r by borough covid data cleaning}
+nyc_daily_borough_testing =
+  read_csv(
+      "./data/covid_data/nyc_daily_covid.csv") %>% 
+  janitor::clean_names() %>% 
+  rename(date = date_of_interest) %>% 
+  mutate(
+    date = as.Date(date, format = "%m/%d/%Y"),
+    date = as.Date(date, tryFormats = c("%Y-%m-%d"))
+  ) %>%
+  pivot_longer(
+    bx_case_count:si_death_count_7day_avg,
+    names_to = "borough_variable",
+    values_to = "observed_value"
+  ) %>% 
+  mutate(
+    borough_variable = str_replace(borough_variable, "bx_", "Bronx/"),
+    borough_variable = str_replace(borough_variable, "bk_", "Brooklyn/"),
+    borough_variable = str_replace(borough_variable, "qn_", "Queens/"),
+    borough_variable = str_replace(borough_variable, "si_", "Staten Island/"),
+    borough_variable = str_replace(borough_variable, "mn_", "Manhattan/")
+  ) %>% 
+  separate(borough_variable, into = c("borough", "observation_type"), sep = "/") %>% 
+  arrange(date, borough, observation_type, observed_value) %>% 
+  pivot_longer(
+    case_count:incomplete,
+    names_to = "total_observation_type",
+    values_to = "total_observed_value"
+  ) %>% 
+  filter(observation_type == c("case_count", "case_count_7day_avg"))
+
+# Add proof-of-concept covid policy changes to df
+# Maybe consider deleting this later
+nyc_daily_borough_testing = 
+  nyc_daily_borough_testing %>% 
+  mutate(
+    policy_change = case_when(
+      date == "2020-03-07" ~ "State of Emergency",
+      date == "2020-03-22" ~ "PAUSE Order",
+      date == "2020-08-08" ~ "Phase 1 Opening",
+      date == "2020-10-01" ~ "Primary Schools Open"),
+    dates_vline = date,
+    dates_vline = case_when(
+      date == "2020-03-07" ~ "TRUE",
+      date == "2020-03-22" ~ "TRUE",
+      date == "2020-08-08" ~ "TRUE",
+      date == "2020-10-01" ~ "TRUE")
+  )
+```
+
+**Exploratory Plots for COVID Case Data and AQI Data:**
+
+```{r}
+nyc_daily_borough_testing %>% 
+  filter(observation_type == c("case_count")) %>% 
+  filter(total_observation_type == c("case_count")) %>% 
+  group_by(date, borough, observation_type) %>% 
+  ggplot(aes(x = date)) + 
+  geom_line(aes(x = date, y = observed_value, color = borough, alpha = 0.5)) +
+  geom_line(aes(x = date, y = total_observed_value, alpha = 0.5,  group = total_observation_type)) +
+  geom_smooth(
+    aes(x = date, y = observed_value, color = borough), 
+        alpha = 0.8, se = F,
+    method = "gam") +
+  geom_smooth(
+    aes(x = date, y = total_observed_value), 
+        alpha = 0.8, se = F) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %d", limits = as.Date(c("2020-03-01", "2020-12-01"))) +
+  coord_cartesian(ylim = c(0, 6000)) +
+  labs(
+    title = "Case Count per NYC Borough over Time",
+    x = "Week Number",
+    y = "Value",
+    caption = "P8105 Final Project")
+```
+
+
+```{r}
+nyc_daily_borough_testing %>% 
+  filter(observation_type == c("case_count_7day_avg")) %>% 
+  group_by(date, borough, observation_type) %>% 
+  ggplot(aes(x = date, y = observed_value, color = borough)) + 
+  geom_line() +
+  geom_vline(xintercept = as.numeric(
+    as.Date(
+      c("2020-03-07","2020-03-22", "2020-08-08", "2020-10-01"))),  
+    linetype = 2) +
+  geom_text(
+    aes(x = as.Date("2020-03-07"),
+                label = c("State of Emergency Declared"), 
+        y = 1000), 
+    alpha = 0.5, colour = "red", angle = 90, vjust = -1, text = element_text(size = 6)) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %d", limits = as.Date(c("2020-03-01", "2020-12-01"))) +
+  coord_cartesian(ylim = c(0,2000)) +
+  labs(
+    title = "7 Day Case Count Average per NYC Borough over Time",
+    x = "Week Number",
+    y = "Value",
+    caption = "P8105 Final Project")
+```
+
+
+
+```{r}
+AQI_2020 %>% 
+  ggplot(aes(x = date, y = median_co, color = borough)) + 
+    geom_point(alpha = .2) +
+    geom_line(alpha = .75, size = .75) +
+      scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+  labs(
+    title = "Median CO Emmissions over Time for each NYC borough, 2020",
+    x = "Month",
+    y = "Median CO (Parts per Million)",
+    caption = "Examining COVID-19 Incidence, P8105 Final Project") 
+
+AQI_2020 %>% 
+  ggplot(aes(x = date, y = median_pm25, color = borough)) + 
+    geom_point(alpha = .2) +
+    geom_line(alpha = .75, size = .75) +
+      scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+  labs(
+    title = "Median Particulate Matter (size<2.5 micrometers) Levels over Time for each NYC borough, 2020",
+    x = "Month",
+    y = "Median Particulate Matter (size < 2.5 micrometeres) Levels (Parts per Millon)",
+    caption = "Examining COVID-19 Incidence, P8105 Final Project") 
+
+
+AQI_2020 %>% 
+  group_by(borough) %>% 
+  ggplot(aes(x = date, y = AQI)) +
+  geom_line() +
+  geom_smooth()
+```
+
+**Dashboard Selection:**
+
+For our dashboard we initially were thinking of doing a plotly flexdashboard until we came up with the idea to add user interactivity for our AQI map. Then after searching on the internet we found out how to create a shiny dashboard which allows the user to change our AQI map to see the AQI values by borough on a specific date. This increases the interpretability and functionality of our AQI map plot as it allows the user to make conclusions about the AQI for whatever date they choose which they would not be able to do on a static plotly map. We initially just included the AQI value and the borough name for our labels on the AQI map plot but after consulting with Gavin we realized that we should add more data such as the AQI for CO. 

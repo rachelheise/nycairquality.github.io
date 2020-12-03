@@ -15,26 +15,13 @@
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
-<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
-<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
-
-<style type="text/css">
-  code{white-space: pre-wrap;}
-  span.smallcaps{font-variant: small-caps;}
-  span.underline{text-decoration: underline;}
-  div.column{display: inline-block; vertical-align: top; width: 50%;}
-  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-  ul.task-list{list-style: none;}
-    </style>
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -285,41 +272,14 @@ $(document).ready(function () {
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="https://asingh100.shinyapps.io/dashboard/">
-    <span class="fa fa-chart-line"></span>
-     
-    Dashboard
-  </a>
+  <a href="https://asingh100.shinyapps.io/dashboard/">Dashboard</a>
 </li>
 <li>
-  <a href="report.html">
-    <span class="fa fa-file-text-o fa-lg"></span>
-     
-    Report
-  </a>
-</li>
-<li>
-  <a href="process.html">
-    <span class="fas fa fas fa-cog"></span>
-     
-    Process
-  </a>
-</li>
-<li>
-  <a href="screencast.html">
-    <span class="fa fa-video"></span>
-     
-    Screencast
-  </a>
+  <a href="Process.html">Process</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        <li>
-  <a href="https://github.com/rachelheise/nycairquality.github.io.git">
-    <span class="fa fa-github fa-lg"></span>
-     
-  </a>
-</li>
+        
       </ul>
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -334,22 +294,315 @@ $(document).ready(function () {
 </div>
 
 
-<p>[placeholder]</p>
+<p><strong>Exploratory Analysis for AQI in 2019 and 2020:</strong></p>
+<p>For the AQI variable we obtained the data from the Air Quality Open Data Platform and filtered the data to only include information about New York City. We then looked online and found out that the EPA actually reports the Air Quality of a specific place by using the Air Quality Index which is calculated by using a piecewise linear function for each pollutant and then taking the maximum value of each pollutant’s AQI value to calculate the overall AQI value. The code we implemented to do this is shown below.</p>
+<pre class="r"><code># Data import and cleaning
+library(tidyverse)</code></pre>
+<pre><code>## -- Attaching packages ---------------------------------------- tidyverse 1.3.0 --</code></pre>
+<pre><code>## v ggplot2 3.3.2     v purrr   0.3.4
+## v tibble  3.0.3     v dplyr   1.0.1
+## v tidyr   1.1.2     v stringr 1.4.0
+## v readr   1.3.1     v forcats 0.5.0</code></pre>
+<pre><code>## -- Conflicts ------------------------------------------- tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(data.table)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;data.table&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:dplyr&#39;:
+## 
+##     between, first, last</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     transpose</code></pre>
+<pre class="r"><code>AQI_2020 = fread(&quot;./data/waqi-covid19-airqualitydata-2020.csv&quot;) %&gt;%
+  janitor::clean_names() %&gt;% 
+  filter(country == &quot;US&quot;) %&gt;%
+  filter(city == &quot;Brooklyn&quot; | city == &quot;Queens&quot; | city == &quot;The Bronx&quot; | city == &quot;Staten Island&quot; | city == &quot;Manhattan&quot;) %&gt;%
+  mutate(borough = city) %&gt;%
+  select(-c(city, country)) %&gt;%
+  pivot_wider(names_from = &quot;specie&quot;, values_from = c(&quot;count&quot;, &quot;min&quot;, &quot;max&quot;, &quot;median&quot;, &quot;variance&quot;)) %&gt;% 
+  select(date, borough, median_pm25, median_o3, median_co, median_no2)
 
-<html>
+# Write functions that calculate the individual AQI (IAQI) for each individual pollutant
+
+IAQI_formula_o3 = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    AQI_o3 = 0
+  }
   
-&nbsp;
-<hr />
-
-<small>
+  else if (AQI &lt;= 54 &amp;&amp; AQI &gt;= 0 ) {
+    IAQI_o3 = (50/54)*(AQI - 0) + 0
+  }
   
-<p style="text-align: center;">
-  Rachel Heise, Fiona Ehrich, Emil Hafeez, Anmol Singh
-</p>
+  else if (AQI &lt;= 70 &amp;&amp; AQI &gt; 54 ) {
+    IAQI_o3 = (50/22)*(AQI - 55) + 51
+  }
+  
+  else if (AQI &lt;= 85 &amp;&amp; AQI &gt; 70) {
+    IAQI_o3 = (50/14)*(AQI - 70) + 101
+  }
+  
+  else if (AQI &lt;= 105 &amp;&amp; AQI &gt; 85 ) {
+    IAQI_o3 = (50/19)*(AQI - 86) + 151
+  }
+  
+  else if (AQI &lt;= 200 &amp;&amp; AQI &gt; 105 ) {
+    IAQI_o3 = (99/94)*(AQI - 106) + 201
+  }
+  
+  else if (AQI &lt;= 404 &amp;&amp; AQI &gt; 204) {
+    IAQI_o3 = (99/199)*(AQI - 205) + 201
+  }
+  
+  else{
+    IAQI_o3 = (199/199)*(AQI - 405) + 301
+  }
+}
 
-</small>
+IAQI_formula_pm25 = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    IAQI_o3 = 0
+  }
+  
+  else if (AQI &lt;= 12 &amp;&amp; AQI &gt;= 0 ) {
+    IAQI_pm25 = (50/12)*(AQI - 0) + 0
+  }
+  
+  else if (AQI &lt;= 35.4 &amp;&amp; AQI &gt;= 12.1 ) {
+    IAQI_pm25 = (50/23.3)*(AQI - 12.1) + 51
+  }
+  
+  else if (AQI &lt;= 55.4 &amp;&amp; AQI &gt;= 35.5 ) {
+    IAQI_pm25 = (50/19.9)*(AQI - 35.5) + 101
+  }
+  
+  else if (AQI &lt;= 150.4 &amp;&amp; AQI &gt;= 55.5 ) {
+    IAQI_pm25 = (50/94.9)*(AQI - 55.5) + 151
+  }
+  
+  else{
+    IAQI_pm25 = (99/99.9)*(AQI - 150.5) + 201
+  }
+}
 
-</html>
+IAQI_formula_co = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    IAQI_o3 = 0
+  }
+  
+  else if (AQI &lt;= 4.4 &amp;&amp; AQI &gt;= 0) {
+    IAQI_co = (50/4.4)*(AQI - 0) + 0
+  }
+  
+  else if (AQI &lt;= 9.4 &amp;&amp; AQI &gt;= 4.5 ) {
+    IAQI_co = (50/4.9)*(AQI - 4.5) + 51
+  }
+  
+  else{
+    IAQI_co = (199/19.9)*(AQI - 30.5) + 301
+  }
+}
+
+IAQI_formula_no2 = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
+    IAQI_o3 = 0
+  }
+  
+  else if (AQI &lt;= 53 &amp;&amp; AQI &gt;= 0 ) {
+    IAQI_no2 = (50/53)*(AQI - 0) + 0
+  }
+  
+  else if (AQI &lt;= 100 &amp;&amp; AQI &gt;= 54 ) {
+    IAQI_no2 = (50/46)*(AQI - 54) + 51
+  }
+  
+  else{
+    IAQI_no2 = (50/259)*(AQI - 101) + 101
+  }
+}
+
+# Generate IAQIs, determine AQI and AQI category based on max IAQI per day
+
+AQI_2020 =
+  AQI_2020 %&gt;% 
+  mutate(
+    IAQI_o3 = map(median_o3, IAQI_formula_o3),
+    IAQI_pm25 = map(median_pm25, IAQI_formula_pm25),
+    IAQI_co = map(median_co, IAQI_formula_co),
+    IAQI_no2 = map(median_no2, IAQI_formula_no2)
+    ) %&gt;% 
+  rowwise() %&gt;% 
+  mutate(
+    AQI = max(IAQI_o3, IAQI_pm25, IAQI_co, IAQI_no2, na.rm = TRUE), # Taking max of the individual AQI scores
+    AQI_category =
+      if_else(
+        AQI &lt;= 50 &amp; AQI &gt;= 0,
+        &quot;Good&quot;,
+        if_else(
+          AQI &lt;= 100 &amp; AQI &gt; 50,
+          &quot;Moderate&quot;,
+          if_else(
+            AQI &lt;= 150 &amp; AQI &gt; 100,
+            &quot;Unhealthy for Sensitive Populations&quot;,
+            &quot;Unhealthy&quot;)
+        )
+      )
+  )</code></pre>
+<p>After computing the AQI’s for the 2019 and 2020 data we then merged the two data sets to try to compare the two years to see if there was any significant changes in Air Quality between 2019 (when COVID had not hit yet) versus in 2020 (during the time of COVID).</p>
+<pre class="r"><code>AQI_2019_and_2020 =
+  rbind(AQI_2019, AQI_2020) %&gt;% 
+  as_tibble() %&gt;% 
+  mutate(
+    date = as.Date(date, tryFormats = c(&quot;%Y-%m-%d&quot;)),
+    borough = recode(borough, &quot;The Bronx&quot; = &quot;Bronx&quot;),
+    IAQI_o3 = unlist(IAQI_o3),
+    IAQI_pm25 = unlist(IAQI_pm25),
+    IAQI_co = unlist(IAQI_co),
+    IAQI_no2 = unlist(IAQI_no2)
+  )</code></pre>
+<p><strong>Exploratory Analysis and Data Cleaning for COVID Data Set:</strong></p>
+<p>We then examined the COVID cases data set and cleaned the data to make the data more readable. This included changing the format of the date variable as well as pivoting the data longer so we can see COVID case trends per borough. We also added in a variable that indicates dates in which NY Government COVID policies were enacted. The code we used to do this is shown below.</p>
+<pre class="r"><code>nyc_daily_borough_testing =
+  read_csv(
+      &quot;./data/covid_data/nyc_daily_covid.csv&quot;) %&gt;% 
+  janitor::clean_names() %&gt;% 
+  rename(date = date_of_interest) %&gt;% 
+  mutate(
+    date = as.Date(date, format = &quot;%m/%d/%Y&quot;),
+    date = as.Date(date, tryFormats = c(&quot;%Y-%m-%d&quot;))
+  ) %&gt;%
+  pivot_longer(
+    bx_case_count:si_death_count_7day_avg,
+    names_to = &quot;borough_variable&quot;,
+    values_to = &quot;observed_value&quot;
+  ) %&gt;% 
+  mutate(
+    borough_variable = str_replace(borough_variable, &quot;bx_&quot;, &quot;Bronx/&quot;),
+    borough_variable = str_replace(borough_variable, &quot;bk_&quot;, &quot;Brooklyn/&quot;),
+    borough_variable = str_replace(borough_variable, &quot;qn_&quot;, &quot;Queens/&quot;),
+    borough_variable = str_replace(borough_variable, &quot;si_&quot;, &quot;Staten Island/&quot;),
+    borough_variable = str_replace(borough_variable, &quot;mn_&quot;, &quot;Manhattan/&quot;)
+  ) %&gt;% 
+  separate(borough_variable, into = c(&quot;borough&quot;, &quot;observation_type&quot;), sep = &quot;/&quot;) %&gt;% 
+  arrange(date, borough, observation_type, observed_value) %&gt;% 
+  pivot_longer(
+    case_count:incomplete,
+    names_to = &quot;total_observation_type&quot;,
+    values_to = &quot;total_observed_value&quot;
+  ) %&gt;% 
+  filter(observation_type == c(&quot;case_count&quot;, &quot;case_count_7day_avg&quot;))</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   .default = col_double(),
+##   date_of_interest = col_character()
+## )</code></pre>
+<pre><code>## See spec(...) for full column specifications.</code></pre>
+<pre class="r"><code># Add proof-of-concept covid policy changes to df
+# Maybe consider deleting this later
+nyc_daily_borough_testing = 
+  nyc_daily_borough_testing %&gt;% 
+  mutate(
+    policy_change = case_when(
+      date == &quot;2020-03-07&quot; ~ &quot;State of Emergency&quot;,
+      date == &quot;2020-03-22&quot; ~ &quot;PAUSE Order&quot;,
+      date == &quot;2020-08-08&quot; ~ &quot;Phase 1 Opening&quot;,
+      date == &quot;2020-10-01&quot; ~ &quot;Primary Schools Open&quot;),
+    dates_vline = date,
+    dates_vline = case_when(
+      date == &quot;2020-03-07&quot; ~ &quot;TRUE&quot;,
+      date == &quot;2020-03-22&quot; ~ &quot;TRUE&quot;,
+      date == &quot;2020-08-08&quot; ~ &quot;TRUE&quot;,
+      date == &quot;2020-10-01&quot; ~ &quot;TRUE&quot;)
+  )</code></pre>
+<p><strong>Exploratory Plots for COVID Case Data and AQI Data:</strong></p>
+<pre class="r"><code>nyc_daily_borough_testing %&gt;% 
+  filter(observation_type == c(&quot;case_count&quot;)) %&gt;% 
+  filter(total_observation_type == c(&quot;case_count&quot;)) %&gt;% 
+  group_by(date, borough, observation_type) %&gt;% 
+  ggplot(aes(x = date)) + 
+  geom_line(aes(x = date, y = observed_value, color = borough, alpha = 0.5)) +
+  geom_line(aes(x = date, y = total_observed_value, alpha = 0.5,  group = total_observation_type)) +
+  geom_smooth(
+    aes(x = date, y = observed_value, color = borough), 
+        alpha = 0.8, se = F,
+    method = &quot;gam&quot;) +
+  geom_smooth(
+    aes(x = date, y = total_observed_value), 
+        alpha = 0.8, se = F) +
+  scale_x_date(date_breaks = &quot;1 month&quot;, date_labels = &quot;%b %d&quot;, limits = as.Date(c(&quot;2020-03-01&quot;, &quot;2020-12-01&quot;))) +
+  coord_cartesian(ylim = c(0, 6000)) +
+  labs(
+    title = &quot;Case Count per NYC Borough over Time&quot;,
+    x = &quot;Week Number&quot;,
+    y = &quot;Value&quot;,
+    caption = &quot;P8105 Final Project&quot;)</code></pre>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ s(x, bs = &quot;cs&quot;)&#39;</code></pre>
+<pre><code>## Warning: Removed 5 rows containing non-finite values (stat_smooth).</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;gam&#39; and formula &#39;y ~ s(x, bs = &quot;cs&quot;)&#39;</code></pre>
+<pre><code>## Warning: Removed 5 rows containing non-finite values (stat_smooth).</code></pre>
+<pre><code>## Warning: Removed 5 row(s) containing missing values (geom_path).
+
+## Warning: Removed 5 row(s) containing missing values (geom_path).</code></pre>
+<p><img src="process_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<pre class="r"><code>nyc_daily_borough_testing %&gt;% 
+  filter(observation_type == c(&quot;case_count_7day_avg&quot;)) %&gt;% 
+  group_by(date, borough, observation_type) %&gt;% 
+  ggplot(aes(x = date, y = observed_value, color = borough)) + 
+  geom_line() +
+  geom_vline(xintercept = as.numeric(
+    as.Date(
+      c(&quot;2020-03-07&quot;,&quot;2020-03-22&quot;, &quot;2020-08-08&quot;, &quot;2020-10-01&quot;))),  
+    linetype = 2) +
+  geom_text(
+    aes(x = as.Date(&quot;2020-03-07&quot;),
+                label = c(&quot;State of Emergency Declared&quot;), 
+        y = 1000), 
+    alpha = 0.5, colour = &quot;red&quot;, angle = 90, vjust = -1, text = element_text(size = 6)) +
+  scale_x_date(date_breaks = &quot;1 month&quot;, date_labels = &quot;%b %d&quot;, limits = as.Date(c(&quot;2020-03-01&quot;, &quot;2020-12-01&quot;))) +
+  coord_cartesian(ylim = c(0,2000)) +
+  labs(
+    title = &quot;7 Day Case Count Average per NYC Borough over Time&quot;,
+    x = &quot;Week Number&quot;,
+    y = &quot;Value&quot;,
+    caption = &quot;P8105 Final Project&quot;)</code></pre>
+<pre><code>## Warning: Ignoring unknown parameters: text</code></pre>
+<pre><code>## Warning: Removed 20 row(s) containing missing values (geom_path).</code></pre>
+<p><img src="process_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<pre class="r"><code>AQI_2020 %&gt;% 
+  ggplot(aes(x = date, y = median_co, color = borough)) + 
+    geom_point(alpha = .2) +
+    geom_line(alpha = .75, size = .75) +
+      scale_x_date(date_breaks = &quot;1 month&quot;, date_labels = &quot;%b %y&quot;) +
+  labs(
+    title = &quot;Median CO Emmissions over Time for each NYC borough, 2020&quot;,
+    x = &quot;Month&quot;,
+    y = &quot;Median CO (Parts per Million)&quot;,
+    caption = &quot;Examining COVID-19 Incidence, P8105 Final Project&quot;) </code></pre>
+<pre><code>## Warning: Removed 92 rows containing missing values (geom_point).</code></pre>
+<pre><code>## Warning: Removed 4 row(s) containing missing values (geom_path).</code></pre>
+<p><img src="process_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<pre class="r"><code>AQI_2020 %&gt;% 
+  ggplot(aes(x = date, y = median_pm25, color = borough)) + 
+    geom_point(alpha = .2) +
+    geom_line(alpha = .75, size = .75) +
+      scale_x_date(date_breaks = &quot;1 month&quot;, date_labels = &quot;%b %y&quot;) +
+  labs(
+    title = &quot;Median Particulate Matter (size&lt;2.5 micrometers) Levels over Time for each NYC borough, 2020&quot;,
+    x = &quot;Month&quot;,
+    y = &quot;Median Particulate Matter (size &lt; 2.5 micrometeres) Levels (Parts per Millon)&quot;,
+    caption = &quot;Examining COVID-19 Incidence, P8105 Final Project&quot;) </code></pre>
+<p><img src="process_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+<pre class="r"><code>AQI_2020 %&gt;% 
+  group_by(borough) %&gt;% 
+  ggplot(aes(x = date, y = AQI)) +
+  geom_line() +
+  geom_smooth()</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;gam&#39; and formula &#39;y ~ s(x, bs = &quot;cs&quot;)&#39;</code></pre>
+<p><img src="process_files/figure-html/unnamed-chunk-3-3.png" width="672" /></p>
+<p><strong>Dashboard Selection:</strong></p>
+<p>For our dashboard we initially were thinking of doing a plotly flexdashboard until we came up with the idea to add user interactivity for our AQI map. Then after searching on the internet we found out how to create a shiny dashboard which allows the user to change our AQI map to see the AQI values by borough on a specific date. This increases the interpretability and functionality of our AQI map plot as it allows the user to make conclusions about the AQI for whatever date they choose which they would not be able to do on a static plotly map. We initially just included the AQI value and the borough name for our labels on the AQI map plot but after consulting with Gavin we realized that we should add more data such as the AQI for CO.</p>
+
 
 
 
@@ -359,7 +612,7 @@ $(document).ready(function () {
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();
