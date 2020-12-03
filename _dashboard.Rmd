@@ -333,7 +333,7 @@ renderPlotly({
   filter(total_observation_type == c("case_count")) %>% 
   plot_ly(
       x = ~date,
-      y = ~AQI_7day_avg*38.64631477,
+      y = ~AQI_7day_avg,
       name = "AQI Index (7 Day Rolling Avg.)",
       type = "scatter",
       mode = "lines",
