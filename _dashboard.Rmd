@@ -2,7 +2,6 @@
 title: "NYC Air Quality Dashboard"
 output:
   flexdashboard::flex_dashboard:
-    orientation: columns
     vertical_layout: fill
     source: embed
 runtime: shiny
@@ -17,20 +16,17 @@ library(shiny)
 library(plotly)
 library(mgcv)
 library(RColorBrewer)
-
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 options(
   ggplot2.continuous.colour = "viridis",
   ggplot2.continuous.fill = "viridis"
 )
-
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
 ```{r 2020 air quality data cleaning, include = FALSE}
 # Data import and cleaning
-
 AQI_2020 = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
   janitor::clean_names() %>% 
   filter(country == "US") %>%
@@ -39,9 +35,7 @@ AQI_2020 = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
   select(-c(city, country)) %>%
   pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
   select(date, borough, median_pm25, median_o3, median_co, median_no2)
-
 # Write functions that calculate the individual AQI (IAQI) for each individual pollutant
-
 IAQI_formula_o3 = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
     AQI_o3 = 0
@@ -75,7 +69,6 @@ IAQI_formula_o3 = function(AQI){
     IAQI_o3 = (199/199)*(AQI - 405) + 301
   }
 }
-
 IAQI_formula_pm25 = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
     IAQI_o3 = 0
@@ -101,7 +94,6 @@ IAQI_formula_pm25 = function(AQI){
     IAQI_pm25 = (99/99.9)*(AQI - 150.5) + 201
   }
 }
-
 IAQI_formula_co = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
     IAQI_o3 = 0
@@ -119,7 +111,6 @@ IAQI_formula_co = function(AQI){
     IAQI_co = (199/19.9)*(AQI - 30.5) + 301
   }
 }
-
 IAQI_formula_no2 = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
     IAQI_o3 = 0
@@ -137,9 +128,7 @@ IAQI_formula_no2 = function(AQI){
     IAQI_no2 = (50/259)*(AQI - 101) + 101
   }
 }
-
 # Generate IAQIs, determine AQI and AQI category based on max IAQI per day
-
 AQI_2020 =
   AQI_2020 %>% 
   mutate(
@@ -169,7 +158,6 @@ AQI_2020 =
 
 ```{r 2019 air quality data cleaning, include = FALSE}
 # Data import and cleaning
-
 AQI_2019 =
   tibble(
     path = list.files("./data/AQI_data_2019") # Listing all file names
@@ -186,9 +174,7 @@ AQI_2019 =
   select(-c(city, country)) %>%
   pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
   select(date, borough, median_pm25, median_o3, median_co, median_no2)
-
 # Generate IAQIs, determine AQI and AQI category based on max IAQI per day
-
 AQI_2019 =
   AQI_2019 %>% 
   mutate(
@@ -260,7 +246,6 @@ nyc_daily_borough_testing =
     values_to = "total_observed_value"
   ) %>% 
   filter(observation_type == c("case_count", "case_count_7day_avg"))
-
 # Add proof-of-concept covid policy changes to df
 # Maybe consider deleting this later
 nyc_daily_borough_testing = 
@@ -278,19 +263,6 @@ nyc_daily_borough_testing =
       date == "2020-08-08" ~ "TRUE",
       date == "2020-10-01" ~ "TRUE")
   )
-
-vline <- function(x = 0, color = "red") {
-  list(
-    type = "line", 
-    y0 = 0, 
-    y1 = 0.9, 
-    yref = "paper",
-    x0 = x, 
-    x1 = x, 
-    line = list(color = color, opacity = 0.75)
-  )
-}
-
 ```
 
 ```{r merge air quality and covid data, echo = F}
@@ -330,9 +302,8 @@ renderPlotly({
       opacity = 0.8,
       text = ~text_label_2,
       yaxis = "y2",
-      inherit = FALSE) %>%
+      inherit = FALSE) %>%  #covid data
     layout(
-      shapes = list(vline("2020-03-07"), vline("2020-03-22"), vline("2020-08-08"), vline("2020-10-01")),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "AQI Index", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
@@ -375,25 +346,23 @@ renderPlotly({
       name = "NYC COVID Case Count"
       ) %>%
     layout(
-      shapes = list(vline("2020-03-07"), vline("2020-03-22"), vline("2020-08-08"), vline("2020-10-01")),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "Carbon Monoxide Index", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
       )
   })
-
 ```
 
 AQI per Borough
 ===================================== 
+
+Column 
+-------------------------------------
 ```{r echo = F}
 borough_coord = tibble("borough" = c("Bronx", "Manhattan", "Brooklyn", "Queens", "Staten Island"), "latitude" = c(40.8448, 40.7731, 40.6782, 40.7282, 40.5795), "longitude" = c(-73.8648, -73.9712, -73.9442, -73.7949, -74.1502))
-
 color_df = colorFactor(c("green", "yellow", "orange", "red"), domain = c("Good", "Moderate", "Unhealthy for Sensitive Populations", "Unhealthy"))
-
 AQI_covid_master = AQI_covid_master %>% 
   left_join(borough_coord, by = "borough")
-
 renderLeaflet({
   AQI_covid_master %>% 
     filter(date == input[["date"]]) %>% 
@@ -416,16 +385,15 @@ renderLeaflet({
               labels = c("Good", "Moderate", "Unhealthy for Sensitive Populations", "Unhealthy"),
               title = "Air Quality Index")
 })
-
 ```
 
+Column {.sidebar}
+-------------------------------------
 ```{r input, echo = F}
-renderUI({ 
   dateInput(
       "date",
       label = h3("Date input"),
       value = "2020-02-29", # Default value
       min = "2020-02-29", # Min value
       max = "2020-11-17") # Max value
-      })
 ```
