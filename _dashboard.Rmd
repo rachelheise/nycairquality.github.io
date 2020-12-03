@@ -306,8 +306,9 @@ AQI_by_borough = AQI_covid_master %>%
   distinct(date, borough, .keep_all = TRUE) %>% 
   group_by(borough) %>% 
   arrange(date) %>% 
-  mutate(co_borough_7day_avg = zoo::rollmean(IAQI_co, k = 7, fill = NA))
-  
+  mutate(co_borough_7day_avg = zoo::rollmean(IAQI_co, k = 7, fill = NA)) %>% 
+  ungroup() %>% 
+  select(-IAQI_co)
 ```
 
 
