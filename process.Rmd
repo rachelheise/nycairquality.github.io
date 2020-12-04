@@ -4,12 +4,12 @@ title: "Process"
 <style type="text/css">
 
 h1.title {
-  text-align: center;
+  text-align: left;
 }
 
 </style>
 
-<center>
+<left>
 
 **Description of Page:**
 
