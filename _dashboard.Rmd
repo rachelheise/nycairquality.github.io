@@ -513,7 +513,8 @@ renderPlotly({
       mode = "lines",
       name = "",
       text = c("PAUSE Order"),
-      showlegend = FALSE
+      showlegend = FALSE,
+      line = list(color = "#000000")
     ) %>%  #covid data
     add_trace( #second text trace date label
       x = c("2020-06-08"),
@@ -524,7 +525,8 @@ renderPlotly({
       mode = "lines",
       name = "",
       text = c("Phase 1 Opening"),
-      showlegend = FALSE
+      showlegend = FALSE,
+      line = list(color = "#000000")
     ) %>% 
     layout(
       shapes = list(vline("2020-03-22"), vline("2020-06-08"), hline(0)),
