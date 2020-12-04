@@ -328,7 +328,7 @@ hline <- function(y = 0, color = "black") { #brief function to flexibly create v
 }
 ```
 
-```{r}
+```{r, include = F}
 AQI_total_2019 =
   AQI_2019 %>% 
   select(date, borough, AQI) %>% 
@@ -369,7 +369,7 @@ AQI_covid_master = left_join(AQI_covid_master, AQI_dif, by = "date")
 
 ```
 
-```{r}
+```{r,include = F}
 # Calculating CO IAQI percentage change by borough
 
 IAQI_co_borough_2019 =
