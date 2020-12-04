@@ -354,14 +354,14 @@ AQI_covid_master = left_join(AQI_covid_master, AQI_dif, by = "date")
 
 ```
 
-```{r eval = FALSE}
+```{r}
 # Calculating CO IAQI percentage change by borough
 
 IAQI_co_borough_2019 =
   AQI_2019 %>% 
   select(date, borough, IAQI_co) %>% 
   rename(IAQI_co_2019 = IAQI_co) %>%
-  mutate(date = str_remove(date, "2019-")) %>% 
+  mutate(date = str_remove(date, "2019-")) 
   
 IAQI_co_borough_2020 =
   AQI_2020 %>% 
