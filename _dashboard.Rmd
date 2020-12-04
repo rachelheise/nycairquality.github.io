@@ -17,6 +17,7 @@ library(plotly)
 library(mgcv)
 library(RColorBrewer)
 library(zoo)
+library(lubridate)
 
 theme_set(theme_minimal() + theme(legend.position = "bottom")) #theming
 options(
@@ -37,6 +38,7 @@ AQI_2020 = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
   select(-c(city, country)) %>%
   pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
   select(date, borough, median_pm25, median_o3, median_co, median_no2)
+
 # Write functions that calculate the individual AQI (IAQI) for each individual pollutant
 IAQI_formula_o3 = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
@@ -153,9 +155,14 @@ AQI_2020 =
             AQI <= 150 & AQI > 100,
             "Unhealthy for Sensitive Populations",
             "Unhealthy")
-        )
-      )
+          )
+        ),
+    IAQI_o3 = unlist(IAQI_o3),
+    IAQI_pm25 = unlist(IAQI_pm25),
+    IAQI_co = unlist(IAQI_co),
+    IAQI_no2 = unlist(IAQI_no2)
   )
+
 ```
 
 ```{r 2019 air quality data cleaning, include = FALSE}
@@ -176,6 +183,7 @@ AQI_2019 =
   select(-c(city, country)) %>%
   pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
   select(date, borough, median_pm25, median_o3, median_co, median_no2)
+
 # Generate IAQIs, determine AQI and AQI category based on max IAQI per day
 AQI_2019 =
   AQI_2019 %>% 
@@ -199,9 +207,15 @@ AQI_2019 =
             AQI <= 150 & AQI > 100,
             "Unhealthy for Sensitive Populations",
             "Unhealthy")
-        )
-      )
-  )
+          )
+        ),
+    IAQI_o3 = unlist(IAQI_o3),
+    IAQI_pm25 = unlist(IAQI_pm25),
+    IAQI_co = unlist(IAQI_co),
+    IAQI_no2 = unlist(IAQI_no2)
+  ) %>% 
+  filter(date > "2018-12-31") # Getting rid of some stray 2018 dates
+
 ```
 
 ```{r merge 2019 and 2020 air quality data, include = FALSE}
@@ -210,11 +224,7 @@ AQI_2019_and_2020 = #merge the 2019 and 2020
   as_tibble() %>% 
   mutate(
     date = as.Date(date, tryFormats = c("%Y-%m-%d")),
-    borough = recode(borough, "The Bronx" = "Bronx"),
-    IAQI_o3 = unlist(IAQI_o3),
-    IAQI_pm25 = unlist(IAQI_pm25),
-    IAQI_co = unlist(IAQI_co),
-    IAQI_no2 = unlist(IAQI_no2)
+    borough = recode(borough, "The Bronx" = "Bronx")
   )
 ```
 
@@ -317,6 +327,77 @@ vline <- function(x = 0, color = "red") { #brief function to flexibly create ver
 ```
 
 
+```{r}
+AQI_total_2019 =
+  AQI_2019 %>% 
+  select(date, borough, AQI) %>% 
+  distinct(date, borough, .keep_all = TRUE) %>% 
+  group_by(date) %>% 
+  mutate(avg_AQI = mean(AQI)) %>% 
+  ungroup() %>% 
+  select(date, avg_AQI) %>% 
+  distinct(date, .keep_all = TRUE) %>% 
+  separate(date, into = c("year","month","day"), sep = "-") %>% 
+  mutate(avg_AQI_2019 = avg_AQI) %>% 
+  select(-avg_AQI)
+
+AQI_total_2020 =
+  AQI_2020 %>% 
+  select(date, borough, AQI) %>% 
+  distinct(date, borough, .keep_all = TRUE) %>% 
+  group_by(date) %>% 
+  mutate(avg_AQI = mean(AQI)) %>% 
+  ungroup() %>% 
+  select(date, avg_AQI) %>% 
+  distinct(date, .keep_all = TRUE) %>% 
+  separate(date, into = c("year","month","day"), sep = "-")
+  
+AQI_dif = right_join(AQI_total_2019, AQI_total_2020, by = c("month", "day")) %>% 
+  drop_na(avg_AQI) %>% 
+  filter(year.x == 2019,
+         year.y == 2020) %>% 
+  mutate(percent_dif_AQI = ((avg_AQI - avg_AQI_2019)*100/avg_AQI_2019)) %>% 
+  mutate(year = year.y) %>% 
+  select(year, month, day, percent_dif_AQI) %>% 
+  unite("date", year:day, sep = "-") %>% 
+  mutate(date = as.Date(date)) %>% 
+  arrange(date) %>% 
+  mutate(aqi_dif_7day_avg = zoo::rollmean(percent_dif_AQI, k = 7, fill = NA))
+
+AQI_covid_master = left_join(AQI_covid_master, AQI_dif, by = "date")
+
+```
+
+```{r}
+# Calculating CO IAQI percentage change by borough
+
+IAQI_co_borough_2019 =
+  AQI_2019 %>% 
+  select(date, borough, IAQI_co) %>% 
+  rename(IAQI_co_2019 = IAQI_co) %>%
+  mutate(date = str_remove(date, "2019-")) 
+  
+IAQI_co_borough_2020 =
+  AQI_2020 %>% 
+  select(date, borough, IAQI_co) %>% 
+  rename(IAQI_co_2020 = IAQI_co) %>%
+  mutate(date = str_remove(date, "2020-"))
+
+IAQI_co_borough_dif =
+  right_join(IAQI_co_borough_2019, IAQI_co_borough_2020, by = c("date", "borough")) %>%  
+  mutate(percent_dif_IAQI_co = ((IAQI_co_2020 - IAQI_co_2019)*100/IAQI_co_2019)) %>%  
+  drop_na(percent_dif_IAQI_co) %>% 
+  select("date", "borough", "percent_dif_IAQI_co") %>% 
+  mutate(
+    date = str_c("2020-", date),
+    date = as.Date(date)
+  ) %>%
+  filter(percent_dif_IAQI_co != Inf) %>% 
+  arrange(date) %>% 
+  mutate(IAQI_co_dif_7day_avg = zoo::rollmean(percent_dif_IAQI_co, k = 7, fill = NA)) %>% 
+  drop_na(IAQI_co_dif_7day_avg)
+```
+
 Time Series Plots
 ===================================== 
 
@@ -336,8 +417,8 @@ renderPlotly({
   filter(total_observation_type == c("case_count")) %>% 
   plot_ly(
       x = ~date,
-      y = ~AQI_7day_avg,
-      name = "AQI Index (7 Day Rolling Avg.)",
+      y = ~aqi_dif_7day_avg,
+      name = "AQI % Diff. from 2019 (7 Day Rolling Avg.)",
       type = "scatter",
       mode = "lines",
       opacity = 0.8,
@@ -382,8 +463,8 @@ renderPlotly({
     layout(
       shapes = list(vline("2020-03-22"), vline("2020-08-08")),
       xaxis = list(title = "Date"),
-      yaxis = list(side = "left", title = "Overall AQI Index (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
-      yaxis2 = list(side = "right", overlaying = "y", title = "New Case Count (Persons)", showgrid = FALSE, zeroline = FALSE)
+      yaxis = list(side = "left", title = "AQI Percent Difference from 2019 (7 Day Rolling Avg.)", showgrid = FALSE, zeroline = FALSE),
+      yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
      )
 })
 ```
