@@ -265,23 +265,6 @@ nyc_daily_borough_testing =
     values_to = "total_observed_value"
   ) %>% 
   filter(observation_type == c("case_count", "case_count_7day_avg"))
-
-# Add covid policy changes to df
-nyc_daily_borough_testing = 
-  nyc_daily_borough_testing %>% 
-  mutate(
-    policy_change = case_when(
-      date == "2020-03-07" ~ "State of Emergency",
-      date == "2020-03-22" ~ "PAUSE Order",
-      date == "2020-08-08" ~ "Phase 1 Opening",
-      date == "2020-10-01" ~ "Primary Schools Open"),
-    dates_vline = date,
-    dates_vline = case_when(
-      date == "2020-03-07" ~ "TRUE",
-      date == "2020-03-22" ~ "TRUE",
-      date == "2020-08-08" ~ "TRUE",
-      date == "2020-10-01" ~ "TRUE")
-  )
 ```
 
 ```{r merge air quality and covid data, echo = F}
@@ -462,7 +445,7 @@ renderPlotly({
       inherit = FALSE
     ) %>%  #covid data
     add_trace( #second text trace date label
-      x = c("2020-08-08"),
+      x = c("2020-06-08"),
       y0 = 0, 
       y1 = 0.9, 
       yref = "paper",
@@ -534,7 +517,7 @@ renderPlotly({
       showlegend = FALSE
     ) %>%  #covid data
     add_trace( #second text trace date label
-      x = c("2020-08-08"),
+      x = c("2020-06-08"),
       y0 = 0, 
       y1 = 0.9, 
       yref = "paper",
