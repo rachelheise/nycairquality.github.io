@@ -186,16 +186,20 @@ AQI_2019 =
 
 # Generate IAQIs, determine AQI and AQI category based on max IAQI per day
 AQI_2019 =
-  AQI_2019 %>% 
+  AQI_2019 %>%
+  mutate(
+    median_co = as.character(median_co),
+    median_co = recode(median_co, "500" = "5"), # Recoding presumably incorrectly entered values
+    median_co = as.numeric(median_co)) %>% 
   mutate(
     IAQI_o3 = map(median_o3, IAQI_formula_o3),
     IAQI_pm25 = map(median_pm25, IAQI_formula_pm25),
     IAQI_co = map(median_co, IAQI_formula_co),
     IAQI_no2 = map(median_no2, IAQI_formula_no2)
-    ) %>% 
+    ) %>%
   rowwise() %>% 
   mutate(
-    AQI = max(IAQI_o3, IAQI_pm25, IAQI_co, IAQI_no2, na.rm = TRUE), # Taking max of the individual AQI scores, right?
+    AQI = max(IAQI_o3, IAQI_pm25, IAQI_co, IAQI_no2, na.rm = TRUE),
     AQI_category =
       if_else(
         AQI <= 50 & AQI >= 0,
@@ -219,7 +223,8 @@ AQI_2019 =
 ```
 
 ```{r merge 2019 and 2020 air quality data, include = FALSE}
-AQI_2019_and_2020 = #merge the 2019 and 2020
+# Merge 2019 and 2020 AQI
+AQI_2019_and_2020 =
   rbind(AQI_2019, AQI_2020) %>% 
   as_tibble() %>% 
   mutate(
@@ -229,7 +234,8 @@ AQI_2019_and_2020 = #merge the 2019 and 2020
 ```
 
 ```{r by borough covid data cleaning, include = FALSE}
-nyc_daily_borough_testing = # prep covid data, initial cleaning
+# Prep covid data, initial cleaning
+nyc_daily_borough_testing = 
   read_csv(
       "./data/covid_data/nyc_daily_covid.csv") %>% 
   janitor::clean_names() %>% 
@@ -258,8 +264,8 @@ nyc_daily_borough_testing = # prep covid data, initial cleaning
     values_to = "total_observed_value"
   ) %>% 
   filter(observation_type == c("case_count", "case_count_7day_avg"))
-# Add proof-of-concept covid policy changes to df
-# Maybe consider deleting this later
+
+# Add covid policy changes to df
 nyc_daily_borough_testing = 
   nyc_daily_borough_testing %>% 
   mutate(
