@@ -15,13 +15,15 @@
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -272,14 +274,41 @@ $(document).ready(function () {
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="https://asingh100.shinyapps.io/dashboard/">Dashboard</a>
+  <a href="https://asingh100.shinyapps.io/dashboard/">
+    <span class="fa fa-chart-line"></span>
+     
+    Dashboard
+  </a>
 </li>
 <li>
-  <a href="Process.html">Process</a>
+  <a href="report.html">
+    <span class="fa fa-file-text-o fa-lg"></span>
+     
+    Report
+  </a>
+</li>
+<li>
+  <a href="process.html">
+    <span class="fas fa fas fa-cog"></span>
+     
+    Process
+  </a>
+</li>
+<li>
+  <a href="screencast.html">
+    <span class="fa fa-video"></span>
+     
+    Screencast
+  </a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/rachelheise/nycairquality.github.io.git">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -294,6 +323,14 @@ $(document).ready(function () {
 </div>
 
 
+<style type="text/css">
+
+h1.title {
+  text-align: center;
+}
+
+</style>
+<center>
 <p><strong>Description of Page:</strong></p>
 <p>This page of our website will give you an overview of the process we went through to conduct this analysis. It will show how we explored and cleaned the major data sets that we used to better understand the data as well as the iteration of processes that we used to come up with our final product.</p>
 <p><strong>Exploratory Analysis for AQI in 2019 and 2020:</strong></p>
@@ -729,6 +766,20 @@ leafletOutput(&#39;map&#39;, height=1000)</code></pre>
   })</code></pre>
 </div>
 
+<html>
+  
+&nbsp;
+<hr />
+
+<small>
+  
+<p style="text-align: center;">
+  Rachel Heise, Fiona Ehrich, Emil Hafeez, Anmol Singh
+</p>
+
+</small>
+
+</html>
 
 
 

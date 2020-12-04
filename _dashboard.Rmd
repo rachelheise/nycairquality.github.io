@@ -272,7 +272,7 @@ AQI_covid_master = #join covid and the full 2019-2020 aqi data
   left_join(nyc_daily_borough_testing, AQI_2019_and_2020, by = c("date", "borough"))
 ```
 
-```{r}
+```{r, echo = F}
 total_AQI = AQI_covid_master %>% #create the rolling averages for the AQI
   select(date, borough, AQI) %>% 
   distinct(date, borough, .keep_all = TRUE) %>% 
@@ -285,7 +285,7 @@ total_AQI = AQI_covid_master %>% #create the rolling averages for the AQI
   mutate(AQI_7day_avg = zoo::rollmean(avg_AQI, k = 7, fill = NA))
 ```
 
-```{r}
+```{r, echo = F}
 AQI_by_borough = AQI_covid_master %>% #create the rolling averages for the AQI, per borough
   select(date, borough, IAQI_co) %>% 
   distinct(date, borough, .keep_all = TRUE) %>% 
@@ -296,13 +296,13 @@ AQI_by_borough = AQI_covid_master %>% #create the rolling averages for the AQI, 
   select(-IAQI_co)
 ```
 
-```{r}
+```{r, echo = F}
 AQI_covid_master = AQI_covid_master %>% #add the per borough to the masterdataset w/ covid
   left_join(total_AQI, by = "date") %>% 
   left_join(AQI_by_borough, by = c("date", "borough"))
 ```
 
-```{r vline function}
+```{r vline function, echo = F}
 vline <- function(x = 0, color = "red") { #brief function to flexibly create vertical line shapes on plotly
   list(
     type = "line", 
@@ -317,10 +317,13 @@ vline <- function(x = 0, color = "red") { #brief function to flexibly create ver
 ```
 
 
-
-
-AQI and COVID Case Count Over Time
+Time Series Plots
 ===================================== 
+
+Row
+-------------------------------------
+
+### AQI and COVID Cases Per Borough
 ```{r plotly line plot 1, echo = F}
 #plot_ly1, the overall AQI_7dayavg and NYC-wide case count
 renderPlotly({
@@ -385,8 +388,10 @@ renderPlotly({
 })
 ```
 
-Carbon Monoxide (CO) IAQI by Borough and NYC COVID Case Count Over Time
-===================================== 
+Row
+-------------------------------------
+
+### Carbon Monoxide (CO) IAQI by Borough and NYC COVID Case Count Over Time
 ```{r plotly line plot 2, echo = F}
 #plotly2, the per-borough AQI rolling average and the per-borough nyc case count
 renderPlotly({
@@ -453,17 +458,17 @@ renderPlotly({
   })
 ```
 
-AQI per Borough
+Map
 ===================================== 
 
-Column 
+Row {data-height = 1500}
 -------------------------------------
 ```{r echo = F}
 borough_coord = tibble("borough" = c("Bronx", "Manhattan", "Brooklyn", "Queens", "Staten Island"), "latitude" = c(40.8448, 40.7731, 40.6782, 40.7282, 40.5795), "longitude" = c(-73.8648, -73.9712, -73.9442, -73.7949, -74.1502))
 color_df = colorFactor(c("green", "yellow", "orange", "red"), domain = c("Good", "Moderate", "Unhealthy for Sensitive Populations", "Unhealthy"))
 AQI_covid_master = AQI_covid_master %>% 
   left_join(borough_coord, by = "borough")
-renderLeaflet({
+output$map = renderLeaflet({
   AQI_covid_master %>% 
     filter(date == input[["date"]]) %>% 
     mutate(popup = str_c("<strong>", borough, "</strong>", "<br/>", "Date: ", date, "<br/>", "Air Quality Category: ", AQI_category, "<br/>", "Air Quality Index: ", round(AQI, 2), "<br/>", "Carbon Monoxide Level: ", lapply(IAQI_co, round, 2)) %>% 
@@ -485,15 +490,20 @@ renderLeaflet({
               labels = c("Good", "Moderate", "Unhealthy for Sensitive Populations", "Unhealthy"),
               title = "Air Quality Index")
 })
+leafletOutput('map', height=1000)
 ```
 
-Column {.sidebar}
+Row {.sidebar}
 -------------------------------------
+
+Use the selector below to examine AQI by borough on a given date.
+
 ```{r input, echo = F}
-  dateInput( #selector
+  dateInput(
       "date",
-      label = h3("Date input"),
+      label = h3("Date:"),
       value = "2020-02-29", # Default value
       min = "2020-02-29", # Min value
       max = "2020-11-14") # Max value
 ```
+
