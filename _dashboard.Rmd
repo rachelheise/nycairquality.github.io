@@ -354,8 +354,30 @@ renderPlotly({
       yaxis = "y2",
       inherit = FALSE,
       hoverinfo = "text") %>%  #covid data
+    add_trace( #first text trace date label
+      x = c("2020-03-22"),
+      y0 = 0, 
+      y1 = 0.9, 
+      yref = "paper",
+      type = "scatter",
+      mode = "lines",
+      name = "",
+      text = c("PAUSE Order"),
+      showlegend = FALSE
+    ) %>%  #covid data
+    add_trace( #second text trace date label
+      x = c("2020-08-08"),
+      y0 = 0, 
+      y1 = 0.9, 
+      yref = "paper",
+      type = "scatter",
+      mode = "lines",
+      name = "",
+      text = c("Phase 1 Opening"),
+      showlegend = FALSE
+    ) %>% 
     layout(
-      shapes = list(vline("2020-03-07"), vline("2020-03-22"), vline("2020-08-08"), vline("2020-10-01")),
+      shapes = list(vline("2020-03-22"), vline("2020-08-08")),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "Overall AQI Index (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "New Case Count (Persons)", showgrid = FALSE, zeroline = FALSE)
@@ -400,8 +422,30 @@ renderPlotly({
       name = "NYC COVID Case Count",
       hoverinfo = "text"
       ) %>% 
+    add_trace( #first text trace date label
+      x = c("2020-03-22"),
+      y0 = 0, 
+      y1 = 0.9, 
+      yref = "paper",
+      type = "scatter",
+      mode = "lines",
+      name = "",
+      text = c("PAUSE Order"),
+      showlegend = FALSE
+    ) %>%  #covid data
+    add_trace( #second text trace date label
+      x = c("2020-08-08"),
+      y0 = 0, 
+      y1 = 0.9, 
+      yref = "paper",
+      type = "scatter",
+      mode = "lines",
+      name = "",
+      text = c("Phase 1 Opening"),
+      showlegend = FALSE
+    ) %>% 
     layout(
-      shapes = list(vline("2020-03-07"), vline("2020-03-22"), vline("2020-08-08"), vline("2020-10-01")),
+      shapes = list(vline("2020-03-22"), vline("2020-08-08")),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "Carbon Monoxide Air Quality Index (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "New Case Count (Persons)", showgrid = FALSE, zeroline = FALSE)
