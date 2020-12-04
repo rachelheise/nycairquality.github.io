@@ -38,6 +38,7 @@ AQI_2020 = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
   select(-c(city, country)) %>%
   pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
   select(date, borough, median_pm25, median_o3, median_co, median_no2)
+
 # Write functions that calculate the individual AQI (IAQI) for each individual pollutant
 IAQI_formula_o3 = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
@@ -182,6 +183,7 @@ AQI_2019 =
   select(-c(city, country)) %>%
   pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
   select(date, borough, median_pm25, median_o3, median_co, median_no2)
+
 # Generate IAQIs, determine AQI and AQI category based on max IAQI per day
 AQI_2019 =
   AQI_2019 %>% 
@@ -312,7 +314,8 @@ AQI_covid_master = AQI_covid_master %>%
 
 
 ```{r}
-AQI_2019 = AQI_2019 %>% 
+AQI_total_2019 =
+  AQI_2019 %>% 
   select(date, borough, AQI) %>% 
   distinct(date, borough, .keep_all = TRUE) %>% 
   group_by(date) %>% 
@@ -324,7 +327,8 @@ AQI_2019 = AQI_2019 %>%
   mutate(avg_AQI_2019 = avg_AQI) %>% 
   select(-avg_AQI)
 
-AQI_2020 = AQI_2020 %>% 
+AQI_total_2020 =
+  AQI_2020 %>% 
   select(date, borough, AQI) %>% 
   distinct(date, borough, .keep_all = TRUE) %>% 
   group_by(date) %>% 
@@ -334,7 +338,7 @@ AQI_2020 = AQI_2020 %>%
   distinct(date, .keep_all = TRUE) %>% 
   separate(date, into = c("year","month","day"), sep = "-")
   
-AQI_dif = right_join(AQI_2019, AQI_2020, by = c("month", "day")) %>% 
+AQI_dif = right_join(AQI_total_2019, AQI_total_2020, by = c("month", "day")) %>% 
   drop_na(avg_AQI) %>% 
   filter(year.x == 2019,
          year.y == 2020) %>% 
@@ -346,10 +350,38 @@ AQI_dif = right_join(AQI_2019, AQI_2020, by = c("month", "day")) %>%
   arrange(date) %>% 
   mutate(aqi_dif_7day_avg = zoo::rollmean(percent_dif_AQI, k = 7, fill = NA))
 
-
-
 AQI_covid_master = left_join(AQI_covid_master, AQI_dif, by = "date")
 
+```
+
+```{r eval = FALSE}
+# Calculating CO IAQI percentage change by borough
+
+IAQI_co_borough_2019 =
+  AQI_2019 %>% 
+  select(date, borough, IAQI_co) %>% 
+  rename(IAQI_co_2019 = IAQI_co) %>%
+  mutate(date = str_remove(date, "2019-")) %>% 
+  
+IAQI_co_borough_2020 =
+  AQI_2020 %>% 
+  select(date, borough, IAQI_co) %>% 
+  rename(IAQI_co_2020 = IAQI_co) %>%
+  mutate(date = str_remove(date, "2020-"))
+
+IAQI_co_borough_dif =
+  right_join(IAQI_co_borough_2019, IAQI_co_borough_2020, by = c("date", "borough")) %>%  
+  mutate(percent_dif_IAQI_co = ((IAQI_co_2020 - IAQI_co_2019)*100/IAQI_co_2019)) %>%  
+  drop_na(percent_dif_IAQI_co) %>% 
+  select("date", "borough", "percent_dif_IAQI_co") %>% 
+  mutate(
+    date = str_c("2019-", date),
+    date = as.Date(date)
+  ) %>%
+  filter(percent_dif_IAQI_co != Inf) %>% 
+  arrange(date) %>% 
+  mutate(IAQI_co_dif_7day_avg = zoo::rollmean(percent_dif_IAQI_co, k = 7, fill = NA)) %>% 
+  drop_na(IAQI_co_dif_7day_avg)
 ```
 
 
