@@ -362,13 +362,13 @@ AQI_dif = right_join(AQI_total_2019, AQI_total_2020, by = c("month", "day")) %>%
   drop_na(avg_AQI) %>% 
   filter(year.x == 2019,
          year.y == 2020) %>% 
-  mutate(percent_dif_AQI = ((avg_AQI - avg_AQI_2019)*100/avg_AQI_2019)) %>% 
+  mutate(AQI_dif = avg_AQI - avg_AQI_2019) %>% 
   mutate(year = year.y) %>% 
-  select(year, month, day, percent_dif_AQI) %>% 
+  select(year, month, day, AQI_dif) %>% 
   unite("date", year:day, sep = "-") %>% 
   mutate(date = as.Date(date)) %>% 
   arrange(date) %>% 
-  mutate(aqi_dif_7day_avg = zoo::rollmean(percent_dif_AQI, k = 7, fill = NA))
+  mutate(AQI_dif_7day_avg = zoo::rollmean(AQI_dif, k = 7, fill = NA))
 
 AQI_covid_master = left_join(AQI_covid_master, AQI_dif, by = "date")
 
@@ -410,21 +410,21 @@ Time Series Plots
 Row
 -------------------------------------
 
-### AQI and COVID Cases Per Borough
+### AQI Difference from 2019 and COVID-19 Case Count
 ```{r plotly line plot 1, echo = F}
 #plot_ly1, the overall AQI_7dayavg and NYC-wide case count
 renderPlotly({
   AQI_covid_master %>% 
   mutate(
-    text_label_1 = str_c("Date: ", date, "\nAQI Index Value: ", round(AQI, 2)),
-    text_label_2 = str_c("Date: ", date, "\nCOVID Case Count: ", observed_value)
+    text_label_1 = str_c("Date: ", date, "\nAQI Difference from 2019: ", round(AQI_dif, 2), "\n2020 AQI Value: ", round(AQI, 2)),
+    text_label_2 = str_c("Date: ", date, "\nCOVID-19 Case Count: ", observed_value)
     ) %>% 
   filter(observation_type == c("case_count")) %>% 
   filter(total_observation_type == c("case_count")) %>% 
   plot_ly(
       x = ~date,
-      y = ~aqi_dif_7day_avg,
-      name = "AQI % Diff. from 2019 (7 Day Rolling Avg.)",
+      y = ~AQI_dif,
+      name = "AQI Difference from 2019 \n(7 Day Rolling Average)",
       type = "scatter",
       mode = "lines",
       opacity = 0.8,
@@ -437,7 +437,7 @@ renderPlotly({
       y = ~total_observed_value,
       type = "scatter",
       mode = "lines",
-      name = "COVID Case Count",
+      name = "COVID-19 Case Count",
       line = list(color = "#005EFF"),
       opacity = 1,
       text = ~text_label_2,
@@ -469,8 +469,8 @@ renderPlotly({
     layout(
       shapes = list(vline("2020-03-22"), vline("2020-08-08")),
       xaxis = list(title = "Date"),
-      yaxis = list(side = "left", title = "AQI Percent Difference from 2019 (7 Day Rolling Avg.)", showgrid = FALSE, zeroline = FALSE),
-      yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
+      yaxis = list(side = "left", title = "AQI Difference from 2019 (7 Day Rolling Average)", showgrid = FALSE, zeroline = FALSE),
+      yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE)
      )
 })
 ```
