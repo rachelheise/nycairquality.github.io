@@ -5,9 +5,9 @@ account: asingh100
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3328569
-bundleId: 3933917
+bundleId: 3938986
 url: https://asingh100.shinyapps.io/dashboard/
-when: 1606928850.29764
+when: 1607015192.07
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: _site.yml|index.html|index.Rmd|README.md|_site/.DS_Store|archive/Proposal_p8105.html|archive/Proposal_p8105.md|archive/Proposal_p8105.Rmd|site_libs
+ignoredFiles: _site.yml|footer.html|index.html|index.Rmd|process.html|process.Rmd|README.md|report.html|report.Rmd|screencast.html|screencast.Rmd|archive/Proposal_p8105.html|archive/Proposal_p8105.md|archive/Proposal_p8105.Rmd|images/.DS_Store|images/nyc.jpg|_site|site_libs

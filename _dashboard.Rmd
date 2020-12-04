@@ -391,7 +391,7 @@ renderPlotly({
   })
 ```
 
-AQI per Borough 
+Map
 ===================================== 
 
 Row {data-height = 1500}
@@ -430,11 +430,12 @@ leafletOutput('map', height=1000)
 Row {.sidebar}
 -------------------------------------
 
-Select date below to select AQI by borough on a specific day
+Use the selector below to examine AQI by borough on a given date.
+
 ```{r input, echo = F}
   dateInput(
       "date",
-      label = h3("Date input"),
+      label = h3("Date:"),
       value = "2020-02-29", # Default value
       min = "2020-02-29", # Min value
       max = "2020-11-17") # Max value
