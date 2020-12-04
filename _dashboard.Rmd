@@ -311,7 +311,7 @@ vline <- function(x = 0, color = "black") { #brief function to flexibly create v
     yref = "paper",
     x0 = x, 
     x1 = x, 
-    line = list(color = "black", opacity = 0.5, dash = "solid", width = 0.5)
+    line = list(color = "black", opacity = 0.5, dash = "solid", width = 0.5),
   )
 }
 
@@ -323,7 +323,7 @@ hline <- function(y = 0, color = "black") { #brief function to flexibly create v
     xref = "paper",
     x0 = 0, 
     x1 = 1, 
-    line = list(color = "green", opacity = 0.1, dash = "dash", width = 1)
+    line = list(color = "black", opacity = 0.1, dash = "dash", width = 1)
   )
 }
 ```
@@ -433,7 +433,7 @@ renderPlotly({
       mode = "lines",
       opacity = 0.8,
       text = ~text_label_1,
-      line = list(color = "#FD8D3C"),
+      line = list(color = "#FFCD58"),
       hoverinfo = "text"
       ) %>%
     add_trace(
@@ -458,7 +458,8 @@ renderPlotly({
       name = "",
       text = c("PAUSE Order"),
       showlegend = FALSE, 
-      color = "black"
+      color = "black",
+      inherit = FALSE
     ) %>%  #covid data
     add_trace( #second text trace date label
       x = c("2020-08-08"),
@@ -470,7 +471,8 @@ renderPlotly({
       name = "",
       text = c("Phase 1 Opening"),
       showlegend = FALSE,
-      color = "black"
+      color = "black",
+      inherit = FALSE
     ) %>% 
     layout(
       shapes = list(vline("2020-03-22"), vline("2020-08-08"), hline(0)),
