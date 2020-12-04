@@ -303,7 +303,7 @@ total_AQI = AQI_covid_master %>% #create the rolling averages for the AQI
 ```
 
 ```{r vline function, echo = F}
-vline <- function(x = 0, color = "red") { #brief function to flexibly create vertical line shapes on plotly
+vline <- function(x = 0, color = "black") { #brief function to flexibly create vertical line shapes on plotly
   list(
     type = "line", 
     y0 = 0, 
@@ -311,7 +311,19 @@ vline <- function(x = 0, color = "red") { #brief function to flexibly create ver
     yref = "paper",
     x0 = x, 
     x1 = x, 
-    line = list(color = color, opacity = 0.75, dash = "dash", width = 1)
+    line = list(color = "black", opacity = 0.5, dash = "solid", width = 0.5)
+  )
+}
+
+hline <- function(y = 0, color = "black") { #brief function to flexibly create vertical line shapes on plotly
+  list(
+    type = "line", 
+    y0 = y, 
+    y1 = y, 
+    xref = "paper",
+    x0 = 0, 
+    x1 = 1, 
+    line = list(color = "green", opacity = 0.1, dash = "dash", width = 1)
   )
 }
 ```
@@ -439,7 +451,8 @@ renderPlotly({
       mode = "lines",
       name = "",
       text = c("PAUSE Order"),
-      showlegend = FALSE
+      showlegend = FALSE, 
+      color = "black"
     ) %>%  #covid data
     add_trace( #second text trace date label
       x = c("2020-08-08"),
@@ -450,10 +463,11 @@ renderPlotly({
       mode = "lines",
       name = "",
       text = c("Phase 1 Opening"),
-      showlegend = FALSE
+      showlegend = FALSE,
+      color = "black"
     ) %>% 
     layout(
-      shapes = list(vline("2020-03-22"), vline("2020-08-08")),
+      shapes = list(vline("2020-03-22"), vline("2020-08-08"), hline(0)),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "AQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE)
@@ -523,7 +537,7 @@ renderPlotly({
       showlegend = FALSE
     ) %>% 
     layout(
-      shapes = list(vline("2020-03-22"), vline("2020-08-08")),
+      shapes = list(vline("2020-03-22"), vline("2020-08-08"), hline(0)),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "Carbon Monoxide IAQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE)
