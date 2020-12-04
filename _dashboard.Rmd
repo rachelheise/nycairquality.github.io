@@ -312,14 +312,14 @@ Row
 renderPlotly({
   AQI_covid_master %>% 
   mutate(
-    text_label_1 = str_c("Date: ", date, "\nAQI Index Value: ", AQI),
-    text_label_2 = str_c("Date: ", date, "\nCOVID Case Count: ", observed_value)
+    text_label_1 = str_c("Date: ", date, "\nAQI Index Value: ", AQI_7day_avg),
+    text_label_2 = str_c("Date: ", date, "\nCOVID Case Count: ", total_observed_value)
     ) %>% 
   filter(observation_type == c("case_count")) %>% 
   filter(total_observation_type == c("case_count")) %>% 
   plot_ly(
       x = ~date,
-      y = ~AQI_7day_avg*38.64631477,
+      y = ~AQI_7day_avg,
       name = "AQI Index (7 Day Rolling Avg.)",
       type = "scatter",
       mode = "lines",
@@ -354,7 +354,7 @@ Row
 renderPlotly({
   AQI_covid_master %>%
     mutate(
-    text_label_3 = str_c("Date: ", date, "\nBorough: ", borough, "\nAQI Index Value: ", AQI),
+    text_label_3 = str_c("Date: ", date, "\nBorough: ", borough, "\nAQI Index Value: ", co_borough_7day_avg),
     text_label_4 = str_c("Date: ", date, "\nCOVID Case Count: ", total_observed_value)
     ) %>% 
     mutate(borough_titles = str_c("Carbon Monoxide IAQI ", borough)) %>% 
