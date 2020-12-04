@@ -415,7 +415,7 @@ renderPlotly({
   AQI_covid_master %>% 
   mutate(
     text_label_1 = str_c("Date: ", date, "\nAQI Difference from 2019: ", round(AQI_dif_7day_avg, 2)),
-    text_label_2 = str_c("Date: ", date, "\nCOVID-19 Case Count: ", observed_value)
+    text_label_2 = str_c("Date: ", date, "\nCOVID-19 Case Count: ", total_observed_value)
     ) %>% 
   filter(observation_type == c("case_count")) %>% 
   filter(total_observation_type == c("case_count")) %>% 
