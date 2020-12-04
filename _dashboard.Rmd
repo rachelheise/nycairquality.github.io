@@ -311,7 +311,7 @@ vline <- function(x = 0, color = "black") { #brief function to flexibly create v
     yref = "paper",
     x0 = x, 
     x1 = x, 
-    line = list(color = "black", opacity = 0.5, dash = "solid", width = 0.5),
+    line = list(color = "black", opacity = 0.5, dash = "solid", width = 0.5)
   )
 }
 
