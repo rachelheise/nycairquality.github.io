@@ -8,7 +8,7 @@ runtime: shiny
 ---
 
 ```{r setup, include = FALSE}
-library(flexdashboard)
+library(flexdashboard) #load libraries
 library(leaflet)
 library(tidyverse)
 library(data.table)
@@ -18,7 +18,7 @@ library(mgcv)
 library(RColorBrewer)
 library(zoo)
 
-theme_set(theme_minimal() + theme(legend.position = "bottom"))
+theme_set(theme_minimal() + theme(legend.position = "bottom")) #theming
 options(
   ggplot2.continuous.colour = "viridis",
   ggplot2.continuous.fill = "viridis"
@@ -205,7 +205,7 @@ AQI_2019 =
 ```
 
 ```{r merge 2019 and 2020 air quality data, include = FALSE}
-AQI_2019_and_2020 =
+AQI_2019_and_2020 = #merge the 2019 and 2020
   rbind(AQI_2019, AQI_2020) %>% 
   as_tibble() %>% 
   mutate(
@@ -219,7 +219,7 @@ AQI_2019_and_2020 =
 ```
 
 ```{r by borough covid data cleaning, include = FALSE}
-nyc_daily_borough_testing =
+nyc_daily_borough_testing = # prep covid data, initial cleaning
   read_csv(
       "./data/covid_data/nyc_daily_covid.csv") %>% 
   janitor::clean_names() %>% 
@@ -268,12 +268,12 @@ nyc_daily_borough_testing =
 ```
 
 ```{r merge air quality and covid data, echo = F}
-AQI_covid_master =
+AQI_covid_master = #join covid and the full 2019-2020 aqi data
   left_join(nyc_daily_borough_testing, AQI_2019_and_2020, by = c("date", "borough"))
 ```
 
 ```{r}
-total_AQI = AQI_covid_master %>% 
+total_AQI = AQI_covid_master %>% #create the rolling averages for the AQI
   select(date, borough, AQI) %>% 
   distinct(date, borough, .keep_all = TRUE) %>% 
   group_by(date) %>% 
@@ -286,7 +286,7 @@ total_AQI = AQI_covid_master %>%
 ```
 
 ```{r}
-AQI_by_borough = AQI_covid_master %>% 
+AQI_by_borough = AQI_covid_master %>% #create the rolling averages for the AQI, per borough
   select(date, borough, IAQI_co) %>% 
   distinct(date, borough, .keep_all = TRUE) %>% 
   group_by(borough) %>% 
@@ -297,13 +297,13 @@ AQI_by_borough = AQI_covid_master %>%
 ```
 
 ```{r}
-AQI_covid_master = AQI_covid_master %>% 
+AQI_covid_master = AQI_covid_master %>% #add the per borough to the masterdataset w/ covid
   left_join(total_AQI, by = "date") %>% 
   left_join(AQI_by_borough, by = c("date", "borough"))
 ```
 
 ```{r vline function}
-vline <- function(x = 0, color = "red") {
+vline <- function(x = 0, color = "red") { #brief function to flexibly create vertical line shapes on plotly
   list(
     type = "line", 
     y0 = 0, 
@@ -322,7 +322,7 @@ vline <- function(x = 0, color = "red") {
 AQI and COVID Case Count Over Time
 ===================================== 
 ```{r plotly line plot 1, echo = F}
-#plot_ly 
+#plot_ly1, the overall AQI_7dayavg and NYC-wide case count
 renderPlotly({
   AQI_covid_master %>% 
   mutate(
@@ -366,6 +366,7 @@ renderPlotly({
 Carbon Monoxide (CO) IAQI by Borough and NYC COVID Case Count Over Time
 ===================================== 
 ```{r plotly line plot 2, echo = F}
+#plotly2, the per-borough AQI rolling average and the per-borough nyc case count
 renderPlotly({
   AQI_covid_master %>%
     mutate(
@@ -445,7 +446,7 @@ renderLeaflet({
 Column {.sidebar}
 -------------------------------------
 ```{r input, echo = F}
-  dateInput(
+  dateInput( #selector
       "date",
       label = h3("Date input"),
       value = "2020-02-29", # Default value
