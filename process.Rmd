@@ -1,15 +1,6 @@
 ---
 title: "Process"
 ---
-<style type="text/css">
-
-h1.title {
-  text-align: left;
-}
-
-</style>
-
-<left>
 
 **Description of Page:**
 
