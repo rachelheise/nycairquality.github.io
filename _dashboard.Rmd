@@ -375,7 +375,7 @@ IAQI_co_borough_dif =
   drop_na(percent_dif_IAQI_co) %>% 
   select("date", "borough", "percent_dif_IAQI_co") %>% 
   mutate(
-    date = str_c("2019-", date),
+    date = str_c("2020-", date),
     date = as.Date(date)
   ) %>%
   filter(percent_dif_IAQI_co != Inf) %>% 
