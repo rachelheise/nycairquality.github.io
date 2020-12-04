@@ -73,7 +73,7 @@ IAQI_formula_o3 = function(AQI){
 }
 IAQI_formula_pm25 = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
-    IAQI_o3 = 0
+    IAQI_pm25 = 0
   }
   
   else if (AQI <= 12 && AQI >= 0 ) {
@@ -98,7 +98,7 @@ IAQI_formula_pm25 = function(AQI){
 }
 IAQI_formula_co = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
-    IAQI_o3 = 0
+    IAQI_co = 0
   }
   
   else if (AQI <= 4.4 && AQI >= 0) {
@@ -115,7 +115,7 @@ IAQI_formula_co = function(AQI){
 }
 IAQI_formula_no2 = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
-    IAQI_o3 = 0
+    IAQI_no2 = 0
   }
   
   else if (AQI <= 53 && AQI >= 0 ) {
@@ -495,5 +495,5 @@ Column {.sidebar}
       label = h3("Date input"),
       value = "2020-02-29", # Default value
       min = "2020-02-29", # Min value
-      max = "2020-11-17") # Max value
+      max = "2020-11-14") # Max value
 ```
