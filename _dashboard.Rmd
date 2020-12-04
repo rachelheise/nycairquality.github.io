@@ -402,6 +402,12 @@ IAQI_co_borough_dif =
 AQI_covid_master = left_join(AQI_covid_master, IAQI_co_borough_dif, by = c("date", "borough"))
 ```
 
+```{r}
+#add a color manipulation object to the plots
+our_oranges = brewer.pal(n = 9, "Oranges")[5:9] #there are 9, I excluded the lighter hues
+```
+
+
 Time Series Plots
 ===================================== 
 
@@ -427,7 +433,7 @@ renderPlotly({
       mode = "lines",
       opacity = 0.8,
       text = ~text_label_1,
-      line = list(color = "#FFA500"),
+      line = list(color = "#FD8D3C"),
       hoverinfo = "text"
       ) %>%
     add_trace(
@@ -495,10 +501,10 @@ renderPlotly({
       split = ~borough_titles,
       type = "scatter",
       mode = "lines",
-      opacity = 0.6,
+      opacity = 0.8,
       text = ~text_label_3,
       color = ~borough_titles,
-      colors = "Oranges",
+      colors = ~our_oranges,
       hoverinfo = "text"
     ) %>% 
     add_trace(
