@@ -285,19 +285,7 @@ total_AQI = AQI_covid_master %>% #create the rolling averages for the AQI
   mutate(AQI_7day_avg = zoo::rollmean(avg_AQI, k = 7, fill = NA))
 ```
 
-```{r vline function, echo = F}
-vline <- function(x = 0, color = "black") { #brief function to flexibly create vertical line shapes on plotly
-  list(
-    type = "line", 
-    y0 = 0, 
-    y1 = 0.9, 
-    yref = "paper",
-    x0 = x, 
-    x1 = x, 
-    line = list(color = "black", opacity = 0.5, dash = "solid", width = 0.5)
-  )
-}
-
+```{r hline function, echo = F}
 hline <- function(y = 0, color = "black") { #brief function to flexibly create vertical line shapes on plotly
   list(
     type = "line", 
@@ -457,7 +445,7 @@ renderPlotly({
       line = list(color = "#000000")
     ) %>% 
     layout(
-      shapes = list(vline("2020-03-22"), vline("2020-06-08"), hline(0)),
+      shapes = list(hline(0)),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "AQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE,autotick = F, tickmode = "array", tickvals = c(0,1000,2000,3000,4000)
@@ -531,7 +519,7 @@ renderPlotly({
     ) %>% 
     layout(
       legend = list(title = list(text = "Select a Borough")),
-      shapes = list(vline("2020-03-22"), vline("2020-06-08"), hline(0)),
+      shapes = list(hline(0)),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "Carbon Monoxide IAQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE, autotick = F, tickmode = "array", tickvals = c(0,1000,2000,3000,4000)
