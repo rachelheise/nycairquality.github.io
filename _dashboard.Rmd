@@ -39,9 +39,9 @@ AQI_2020 = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
   pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
   select(date, borough, median_pm25, median_o3, median_co, median_no2)
 
-# Write functions that calculate the individual AQI (IAQI) for each individual pollutant and account for missing values
-IAQI_formula_o3 = function(AQI){ #ozone
-  if (is.na(AQI) == TRUE) { 
+# Write functions that calculate the individual AQI (IAQI) for each individual pollutant
+IAQI_formula_o3 = function(AQI){
+  if (is.na(AQI) == TRUE) { # Accounting for missing values
     AQI_o3 = 0
   }
   
@@ -132,6 +132,7 @@ IAQI_formula_no2 = function(AQI){
     IAQI_no2 = (50/259)*(AQI - 101) + 101
   }
 }
+
 # Generate IAQIs, determine AQI and AQI category based on max IAQI per day, for 2020
 AQI_2020 = #map the functions over median values and store the result in an IAQI variable, then mutate to create a categorical variable
   AQI_2020 %>% 
@@ -335,7 +336,8 @@ AQI_total_2020 = # same as 2019
   select(date, avg_AQI) %>% 
   distinct(date, .keep_all = TRUE) %>% 
   separate(date, into = c("year","month","day"), sep = "-")
-  
+ 
+
 AQI_dif = right_join(AQI_total_2019, AQI_total_2020, by = c("month", "day")) %>% #join by date, rolling 7 day average
   drop_na(avg_AQI) %>% 
   filter(year.x == 2019,
