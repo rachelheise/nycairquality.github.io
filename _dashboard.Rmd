@@ -438,8 +438,7 @@ renderPlotly({
       shapes = list(hline(0)), #set the policy shapes, and a horizontal line at y=0 to show improvement vs decline in AQI
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "AQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
-      yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE,autotick = F, tickmode = "array", tickvals = c(0,1000,2000,3000,4000) #we manually set these yaxis 2 values to exclude 5000 and 6000 since the legent kept overlapping the axis; this was the only solution effective
-)
+      yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE) 
      )
 })
 ```
@@ -515,7 +514,7 @@ renderPlotly({
       shapes = list(hline(0)),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "Carbon Monoxide IAQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
-      yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE, autotick = F, tickmode = "array", tickvals = c(0,1000,2000,3000,4000)
+      yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE, autotick = F, tickmode = "array", tickvals = c(0,1000,2000,3000,4000) #manually set second axis values up to 4000 since with 5000 and 6000 the legend was cutting off the axis labels; this is the best solution for this problem we could come up with.
 )
       )
   })
