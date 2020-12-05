@@ -460,7 +460,8 @@ renderPlotly({
       shapes = list(vline("2020-03-22"), vline("2020-06-08"), hline(0)),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "AQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
-      yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE)
+      yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE,autotick = F, tickmode = "array", tickvals = c(0,1000,2000,3000,4000)
+)
      )
 })
 ```
@@ -477,7 +478,7 @@ renderPlotly({
     text_label_3 = str_c("Date: ", date, "\nBorough: ", borough, "\nCO IAQI Difference from 2019: ", round(IAQI_co_dif_7day_avg, 2)),
     text_label_4 = str_c("Date: ", date, "\nCOVID-19 Case Count: ", total_observed_value)
     ) %>% 
-    mutate(borough_titles = str_c(borough, " CO IAQI Difference")) %>% 
+    mutate(borough_titles = str_c(borough)) %>% 
     filter(total_observation_type == "case_count") %>% 
     plot_ly(
       x = ~date,
@@ -501,7 +502,7 @@ renderPlotly({
       text = ~text_label_4,
       yaxis = "y2",
       inherit = FALSE,
-      name = "COVID-19 Case Count",
+      name = "COVID-19 Cases",
       hoverinfo = "text"
       ) %>% 
     add_trace( #first text trace date label
@@ -529,10 +530,12 @@ renderPlotly({
       line = list(color = "#000000")
     ) %>% 
     layout(
+      legend = list(title = list(text = "Select a Borough")),
       shapes = list(vline("2020-03-22"), vline("2020-06-08"), hline(0)),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "Carbon Monoxide IAQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
-      yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE)
+      yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE, autotick = F, tickmode = "array", tickvals = c(0,1000,2000,3000,4000)
+)
       )
   })
 ```
