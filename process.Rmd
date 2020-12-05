@@ -10,11 +10,11 @@ This page of our website will give you an overview of the process we went throug
 
 For the AQI variable we obtained the data from the Air Quality Open Data Platform and filtered the data to only include information about New York City. We then looked online and found out that the EPA actually reports the Air Quality of a specific place by using the Air Quality Index which is calculated by using a piecewise linear function for each pollutant and then taking the maximum value of each pollutant's AQI value to calculate the overall AQI value. The code we implemented to do this is shown below. Note that we did not include the code for 2019 on this page since the procedure is exactly the same as for 2020, if you would like to see the code for 2019 please reference the process.Rmd document on this repository.  
 
-```{r 2020 air quality data cleaning, message = F}
-# Data import and cleaning
+```{r, message = F}
 library(tidyverse)
 library(data.table)
 
+# Data import and cleaning
 AQI_2020 = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
   janitor::clean_names() %>% 
   filter(country == "US") %>%
@@ -59,7 +59,6 @@ IAQI_formula_o3 = function(AQI){
     IAQI_o3 = (199/199)*(AQI - 405) + 301
   }
 }
-
 IAQI_formula_pm25 = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
     IAQI_pm25 = 0
@@ -85,7 +84,6 @@ IAQI_formula_pm25 = function(AQI){
     IAQI_pm25 = (99/99.9)*(AQI - 150.5) + 201
   }
 }
-
 IAQI_formula_co = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
     IAQI_co = 0
@@ -103,7 +101,6 @@ IAQI_formula_co = function(AQI){
     IAQI_co = (199/19.9)*(AQI - 30.5) + 301
   }
 }
-
 IAQI_formula_no2 = function(AQI){
   if (is.na(AQI) == TRUE) { # Accounting for missing values
     IAQI_no2 = 0
@@ -121,9 +118,7 @@ IAQI_formula_no2 = function(AQI){
     IAQI_no2 = (50/259)*(AQI - 101) + 101
   }
 }
-
 # Generate IAQIs, determine AQI and AQI category based on max IAQI per day
-
 AQI_2020 =
   AQI_2020 %>% 
   mutate(
@@ -134,7 +129,7 @@ AQI_2020 =
     ) %>% 
   rowwise() %>% 
   mutate(
-    AQI = max(IAQI_o3, IAQI_pm25, IAQI_co, IAQI_no2, na.rm = TRUE), # Taking max of the individual AQI scores
+    AQI = max(IAQI_o3, IAQI_pm25, IAQI_co, IAQI_no2, na.rm = TRUE), # Taking max of the individual AQI scores, right?
     AQI_category =
       if_else(
         AQI <= 50 & AQI >= 0,
@@ -146,14 +141,18 @@ AQI_2020 =
             AQI <= 150 & AQI > 100,
             "Unhealthy for Sensitive Populations",
             "Unhealthy")
-        )
-      )
-  )
+          )
+        ),
+    IAQI_o3 = unlist(IAQI_o3),
+    IAQI_pm25 = unlist(IAQI_pm25),
+    IAQI_co = unlist(IAQI_co),
+    IAQI_no2 = unlist(IAQI_no2)
+  ) %>% 
+  mutate(borough = recode(borough, "The Bronx" = "Bronx")) # Tweaking coding for combo with covid data
 ```
 
-```{r 2019 air quality data cleaning, include = F}
+```{r 2019 air quality data cleaning, include = FALSE}
 # Data import and cleaning
-
 AQI_2019 =
   tibble(
     path = list.files("./data/AQI_data_2019") # Listing all file names
@@ -170,20 +169,22 @@ AQI_2019 =
   select(-c(city, country)) %>%
   pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
   select(date, borough, median_pm25, median_o3, median_co, median_no2)
-
 # Generate IAQIs, determine AQI and AQI category based on max IAQI per day
-
 AQI_2019 =
-  AQI_2019 %>% 
+  AQI_2019 %>%
+  mutate(
+    median_co = as.character(median_co),
+    median_co = recode(median_co, "500" = "5"), # Recoding presumably incorrectly entered values
+    median_co = as.numeric(median_co)) %>% 
   mutate(
     IAQI_o3 = map(median_o3, IAQI_formula_o3),
     IAQI_pm25 = map(median_pm25, IAQI_formula_pm25),
     IAQI_co = map(median_co, IAQI_formula_co),
     IAQI_no2 = map(median_no2, IAQI_formula_no2)
-    ) %>% 
+    ) %>%
   rowwise() %>% 
   mutate(
-    AQI = max(IAQI_o3, IAQI_pm25, IAQI_co, IAQI_no2, na.rm = TRUE), # Taking max of the individual AQI scores
+    AQI = max(IAQI_o3, IAQI_pm25, IAQI_co, IAQI_no2, na.rm = TRUE),
     AQI_category =
       if_else(
         AQI <= 50 & AQI >= 0,
@@ -195,11 +196,16 @@ AQI_2019 =
             AQI <= 150 & AQI > 100,
             "Unhealthy for Sensitive Populations",
             "Unhealthy")
-        )
-      )
-  )
+          )
+        ),
+    IAQI_o3 = unlist(IAQI_o3),
+    IAQI_pm25 = unlist(IAQI_pm25),
+    IAQI_co = unlist(IAQI_co),
+    IAQI_no2 = unlist(IAQI_no2)
+  ) %>% 
+  filter(date > "2018-12-31") %>% # Getting rid of some stray 2018 dates
+  mutate(borough = recode(borough, "The Bronx" = "Bronx")) # Tweaking coding for combo with covid data
 ```
-
 
 After computing the AQI's for the 2019 and 2020 data we then merged the two data sets to try to compare the two years to see if there was any significant changes in Air Quality between 2019 (when COVID had not hit yet) versus in 2020 (during the time of COVID).
 
@@ -452,66 +458,100 @@ leafletOutput('map', height=1000)
 
 For the other plots on our final dashboard we used plotly as we didn't need to have user input since they were showing the trend of different variables over time anyways. However we still wanted to add some features to increase the clarity of our plots such as showing labels when a user hovers over a specific data point in the plot. Thus, we used plotly instead of just a ggplot as plotly would allow us to incorporate this feature into our line plots. The code we used to create these line plots is shown below.
 
-### AQI and COVID Cases Per Borough
+### AQI Difference from 2019 and COVID-19 Case Count Over Time
 ```{r plotly line plot 1, eval = F}
+#plot_ly1, the overall AQI_7dayavg and NYC-wide case count
 renderPlotly({
   AQI_covid_master %>% 
   mutate(
-    text_label_1 = str_c("Date: ", date, "\nAQI Index Value: ", AQI_7day_avg),
-    text_label_2 = str_c("Date: ", date, "\nCOVID Case Count: ", total_observed_value)
+    text_label_1 = str_c("Date: ", date, "\nAQI Difference from 2019: ", round(AQI_dif_7day_avg, 2)),
+    text_label_2 = str_c("Date: ", date, "\nCOVID-19 Case Count: ", total_observed_value)
     ) %>% 
   filter(observation_type == c("case_count")) %>% 
   filter(total_observation_type == c("case_count")) %>% 
   plot_ly(
       x = ~date,
-      y = ~AQI_7day_avg,
-      name = "AQI Index (7 Day Rolling Avg.)",
+      y = ~AQI_dif_7day_avg,
+      name = "AQI Difference from 2019",
       type = "scatter",
       mode = "lines",
-      opacity = 0.3,
+      opacity = 0.8,
       text = ~text_label_1,
-      line = list(color = "#FFA500")
+      line = list(color = "#FFCD58"),
+      hoverinfo = "text"
       ) %>%
     add_trace(
       x = ~date,
       y = ~total_observed_value,
       type = "scatter",
       mode = "lines",
-      name = "COVID Case Count",
+      name = "COVID-19 Case Count",
       line = list(color = "#005EFF"),
-      opacity = 0.8,
+      opacity = 1,
       text = ~text_label_2,
       yaxis = "y2",
-      inherit = FALSE) %>%  #covid data
+      inherit = FALSE,
+      hoverinfo = "text") %>%  #covid data
+    add_trace( #first text trace date label
+      x = c("2020-03-22"),
+      y0 = 0, 
+      y1 = 0.9, 
+      yref = "paper",
+      type = "scatter",
+      mode = "lines",
+      name = "",
+      text = c("PAUSE Order"),
+      showlegend = FALSE, 
+      color = "black",
+      line = list(color = "#000000")
+    ) %>%  #covid data
+    add_trace( #second text trace date label
+      x = c("2020-06-08"),
+      y0 = 0, 
+      y1 = 0.9, 
+      yref = "paper",
+      type = "scatter",
+      mode = "lines",
+      name = "",
+      text = c("Phase 1 Opening"),
+      showlegend = FALSE,
+      line = list(color = "#000000")
+    ) %>% 
     layout(
+      shapes = list(vline("2020-03-22"), vline("2020-06-08"), hline(0)),
       xaxis = list(title = "Date"),
-      yaxis = list(side = "left", title = "AQI Index (7 day avg)", showgrid = FALSE, zeroline = FALSE),
-      yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
+      yaxis = list(side = "left", title = "AQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
+      yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE,autotick = F, tickmode = "array", tickvals = c(0,1000,2000,3000,4000)
+)
      )
 })
 ```
 
+Row
+-------------------------------------
 
-### Carbon Monoxide (CO) IAQI by Borough and NYC COVID Case Count Over Time
+### Carbon Monoxide IAQI Difference from 2019 by Borough and COVID-19 Case Count Over Time
 ```{r plotly line plot 2, eval = F}
+#plotly2, the per-borough AQI rolling average and the per-borough nyc case count
 renderPlotly({
   AQI_covid_master %>%
     mutate(
-    text_label_3 = str_c("Date: ", date, "\nBorough: ", borough, "\nAQI Index Value: ", co_borough_7day_avg),
-    text_label_4 = str_c("Date: ", date, "\nCOVID Case Count: ", total_observed_value)
+    text_label_3 = str_c("Date: ", date, "\nBorough: ", borough, "\nCO IAQI Difference from 2019: ", round(IAQI_co_dif_7day_avg, 2)),
+    text_label_4 = str_c("Date: ", date, "\nCOVID-19 Case Count: ", total_observed_value)
     ) %>% 
-    mutate(borough_titles = str_c("Carbon Monoxide IAQI ", borough)) %>% 
+    mutate(borough_titles = str_c(borough)) %>% 
     filter(total_observation_type == "case_count") %>% 
     plot_ly(
-    x = ~date,
-    y = ~co_borough_7day_avg,
-    split = ~borough_titles,
-    type = "scatter",
-    mode = "lines",
-    opacity = 0.3,
-    text = ~text_label_3,
-    color = ~borough_titles,
-    colors = "Oranges"
+      x = ~date,
+      y = ~IAQI_co_dif_7day_avg,
+      split = ~borough_titles,
+      type = "scatter",
+      mode = "lines",
+      opacity = 0.8,
+      text = ~text_label_3,
+      color = ~borough_titles,
+      colors = ~our_oranges,
+      hoverinfo = "text"
     ) %>% 
     add_trace(
       x = ~date,
@@ -519,17 +559,44 @@ renderPlotly({
       type = "scatter",
       mode = "lines",
       line = list(color = "#005EFF"),
-      opacity = 0.8,
+      opacity = 1,
       text = ~text_label_4,
       yaxis = "y2",
       inherit = FALSE,
-      name = "NYC COVID Case Count"
-      ) %>%
+      name = "COVID-19 Cases",
+      hoverinfo = "text"
+      ) %>% 
+    add_trace( #first text trace date label
+      x = c("2020-03-22"),
+      y0 = 0, 
+      y1 = 0.9, 
+      yref = "paper",
+      type = "scatter",
+      mode = "lines",
+      name = "",
+      text = c("PAUSE Order"),
+      showlegend = FALSE,
+      line = list(color = "#000000")
+    ) %>%  #covid data
+    add_trace( #second text trace date label
+      x = c("2020-06-08"),
+      y0 = 0, 
+      y1 = 0.9, 
+      yref = "paper",
+      type = "scatter",
+      mode = "lines",
+      name = "",
+      text = c("Phase 1 Opening"),
+      showlegend = FALSE,
+      line = list(color = "#000000")
+    ) %>% 
     layout(
-      legend = list(x = "Jul 1, 2020", y = 120),
+      legend = list(title = list(text = "Select a Borough")),
+      shapes = list(vline("2020-03-22"), vline("2020-06-08"), hline(0)),
       xaxis = list(title = "Date"),
-      yaxis = list(side = "left", title = "CO IAQI (7 day avg.)", showgrid = FALSE, zeroline = FALSE),
-      yaxis2 = list(side = "right", overlaying = "y", title = "Case Count", showgrid = FALSE, zeroline = FALSE)
+      yaxis = list(side = "left", title = "Carbon Monoxide IAQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
+      yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE, autotick = F, tickmode = "array", tickvals = c(0,1000,2000,3000,4000)
+)
       )
   })
 ```
