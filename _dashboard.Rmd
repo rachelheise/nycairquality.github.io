@@ -18,7 +18,6 @@ library(mgcv)
 library(RColorBrewer)
 library(zoo)
 library(lubridate)
-
 theme_set(theme_minimal() + theme(legend.position = "bottom")) #theming
 options(
   ggplot2.continuous.colour = "viridis",
@@ -38,10 +37,9 @@ AQI_2020 = fread("./data/waqi-covid19-airqualitydata-2020.csv") %>%
   select(-c(city, country)) %>%
   pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
   select(date, borough, median_pm25, median_o3, median_co, median_no2)
-
-# Write functions that calculate the individual AQI (IAQI) for each individual pollutant
-IAQI_formula_o3 = function(AQI){
-  if (is.na(AQI) == TRUE) { # Accounting for missing values
+# Write functions that calculate the individual AQI (IAQI) for each individual pollutant and account for missing values
+IAQI_formula_o3 = function(AQI){ #ozone
+  if (is.na(AQI) == TRUE) { 
     AQI_o3 = 0
   }
   
@@ -132,7 +130,6 @@ IAQI_formula_no2 = function(AQI){
     IAQI_no2 = (50/259)*(AQI - 101) + 101
   }
 }
-
 # Generate IAQIs, determine AQI and AQI category based on max IAQI per day, for 2020
 AQI_2020 = #map the functions over median values and store the result in an IAQI variable, then mutate to create a categorical variable
   AQI_2020 %>% 
@@ -164,7 +161,6 @@ AQI_2020 = #map the functions over median values and store the result in an IAQI
     IAQI_no2 = unlist(IAQI_no2)
   ) %>% 
   mutate(borough = recode(borough, "The Bronx" = "Bronx")) # Tweaking naming and structure for combo with covid data
-
 ```
 
 ```{r 2019 air quality data cleaning, include = FALSE}
@@ -185,7 +181,6 @@ AQI_2019 =
   select(-c(city, country)) %>%
   pivot_wider(names_from = "specie", values_from = c("count", "min", "max", "median", "variance")) %>% 
   select(date, borough, median_pm25, median_o3, median_co, median_no2)
-
 # Generate IAQIs, determine AQI and AQI category based on max IAQI per day, for 2019
 AQI_2019 =
   AQI_2019 %>%
@@ -222,7 +217,6 @@ AQI_2019 =
   ) %>% 
   filter(date > "2018-12-31") %>% # Remove 2018 dates from the 2019 dataset, raw data had them
   mutate(borough = recode(borough, "The Bronx" = "Bronx")) # Tweaking naming and structure for combo with covid data
-
 ```
 
 ```{r merge 2019 and 2020 air quality data, include = FALSE}
@@ -286,19 +280,7 @@ total_AQI = AQI_covid_master %>% #create the rolling averages for the AQI
   mutate(AQI_7day_avg = zoo::rollmean(avg_AQI, k = 7, fill = NA))
 ```
 
-```{r vline function, echo = F}
-vline <- function(x = 0, color = "black") { #brief function to create flexible vertical line shapes on plotly
-  list(
-    type = "line", 
-    y0 = 0, 
-    y1 = 0.9, 
-    yref = "paper",
-    x0 = x, 
-    x1 = x, 
-    line = list(color = "black", opacity = 0.5, dash = "solid", width = 0.5)
-  )
-}
-
+```{r hline function, echo = F}
 hline <- function(y = 0, color = "black") { #brief function to create flexible vertical line shapes on plotly
   list(
     type = "line", 
@@ -325,7 +307,6 @@ AQI_total_2019 = # steps to take the difference in 2020 AQI values from 2019 AQI
   separate(date, into = c("year","month","day"), sep = "-") %>% 
   mutate(avg_AQI_2019 = avg_AQI) %>% 
   select(-avg_AQI)
-
 AQI_total_2020 = # same as 2019 
   AQI_2020 %>% 
   select(date, borough, AQI) %>% 
@@ -336,8 +317,7 @@ AQI_total_2020 = # same as 2019
   select(date, avg_AQI) %>% 
   distinct(date, .keep_all = TRUE) %>% 
   separate(date, into = c("year","month","day"), sep = "-")
- 
-
+  
 AQI_dif = right_join(AQI_total_2019, AQI_total_2020, by = c("month", "day")) %>% #join by date, rolling 7 day average
   drop_na(avg_AQI) %>% 
   filter(year.x == 2019,
@@ -349,14 +329,11 @@ AQI_dif = right_join(AQI_total_2019, AQI_total_2020, by = c("month", "day")) %>%
   mutate(date = as.Date(date)) %>% 
   arrange(date) %>% 
   mutate(AQI_dif_7day_avg = zoo::rollmean(AQI_dif, k = 7, fill = NA))
-
 AQI_covid_master = left_join(AQI_covid_master, AQI_dif, by = "date") #and join this to the covid dataset for full visualization
-
 ```
 
 ```{r,include = F}
 # Calculating CO IAQI percentage change by borough
-
 IAQI_co_borough_2019 = # a similar process is used for CO data specifically
   AQI_2019 %>% 
   select(date, borough, IAQI_co) %>% 
@@ -368,7 +345,6 @@ IAQI_co_borough_2020 =
   select(date, borough, IAQI_co) %>% 
   rename(IAQI_co_2020 = IAQI_co) %>%
   mutate(date = str_remove(date, "2020-"))
-
 IAQI_co_borough_dif =
   right_join(IAQI_co_borough_2019, IAQI_co_borough_2020, by = c("date", "borough")) %>%  
   mutate(IAQI_co_dif = IAQI_co_2020 - IAQI_co_2019) %>%  #note this is for CO specifically
@@ -383,7 +359,6 @@ IAQI_co_borough_dif =
   mutate(IAQI_co_dif_7day_avg = zoo::rollmean(IAQI_co_dif, borough, k = 7, fill = NA)) %>% #similar rolling average
   drop_na(IAQI_co_dif_7day_avg) %>% 
   ungroup()
-
 AQI_covid_master = left_join(AQI_covid_master, IAQI_co_borough_dif, by = c("date", "borough"))
 ```
 
@@ -460,7 +435,7 @@ renderPlotly({
       line = list(color = "#000000") #black
     ) %>% 
     layout(
-      shapes = list(vline("2020-03-22"), vline("2020-06-08"), hline(0)), #set the policy shapes, and a horizontal line at y=0 to show improvement vs decline in AQI
+      shapes = list(hline(0)), #set the policy shapes, and a horizontal line at y=0 to show improvement vs decline in AQI
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "AQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE,autotick = F, tickmode = "array", tickvals = c(0,1000,2000,3000,4000) #we manually set these yaxis 2 values to exclude 5000 and 6000 since the legent kept overlapping the axis; this was the only solution effective
@@ -475,7 +450,6 @@ Row
 ### Carbon Monoxide IAQI Difference from 2019 by Borough and COVID-19 Case Count Over Time
 ```{r plotly line plot 2, echo = F}
 #plotly2, the per-borough AQI rolling average and the per-borough nyc case count
-#similar structure to previous plotly. Shiny architecture and then plot each trace, this time with a per-borough nuance
 renderPlotly({
   AQI_covid_master %>%
     mutate(
@@ -486,14 +460,15 @@ renderPlotly({
     filter(total_observation_type == "case_count") %>% 
     plot_ly(
       x = ~date,
-      y = ~IAQI_co_dif_7day_avg, #notice CO per borough
+      y = ~IAQI_co_dif_7day_avg,
       split = ~borough_titles,
       type = "scatter",
       mode = "lines",
       opacity = 0.8,
+      visible = "legendonly",
       text = ~text_label_3,
       color = ~borough_titles,
-      colors = ~our_oranges, #using our custom oranges palette
+      colors = ~our_oranges,
       hoverinfo = "text"
     ) %>% 
     add_trace(
@@ -501,7 +476,7 @@ renderPlotly({
       y = ~total_observed_value,
       type = "scatter",
       mode = "lines",
-      line = list(color = "#005EFF"), #color alignment with previous, as noted
+      line = list(color = "#005EFF"),
       opacity = 1,
       text = ~text_label_4,
       yaxis = "y2",
@@ -519,7 +494,8 @@ renderPlotly({
       name = "",
       text = c("PAUSE Order"),
       showlegend = FALSE,
-      line = list(color = "#000000") 
+      visible = T,
+      line = list(color = "#000000")
     ) %>%  #covid data
     add_trace( #second text trace date label
       x = c("2020-06-08"),
@@ -530,12 +506,13 @@ renderPlotly({
       mode = "lines",
       name = "",
       text = c("Phase 1 Opening"),
+      visible = T,
       showlegend = FALSE,
       line = list(color = "#000000")
     ) %>% 
     layout(
       legend = list(title = list(text = "Select a Borough")),
-      shapes = list(vline("2020-03-22"), vline("2020-06-08"), hline(0)),
+      shapes = list(hline(0)),
       xaxis = list(title = "Date"),
       yaxis = list(side = "left", title = "Carbon Monoxide IAQI Difference from 2019 (7 Day Average)", showgrid = FALSE, zeroline = FALSE),
       yaxis2 = list(side = "right", overlaying = "y", title = "COVID-19 Case Count", showgrid = FALSE, zeroline = FALSE, autotick = F, tickmode = "array", tickvals = c(0,1000,2000,3000,4000)
@@ -592,4 +569,3 @@ Use the selector below to examine AQI by borough on a given date.
       min = "2020-02-29", # Min value
       max = "2020-11-14") # Max value
 ```
-
