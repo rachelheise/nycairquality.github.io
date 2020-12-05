@@ -106,7 +106,7 @@ Our project scope did not include statistical analyses, but rather the explorati
 
 After performing this analysis, we are struck by how responsive air quality is to social and economic trends. There is a clear difference between the air quality index during the lockdown and after Phase 1 reopening, indicating residential and/or commercial behavior shift. In fact, air quality is consistently improved from March through late July of 2020, compared to 2019. 
 
-<img src="images/aqi_covid_cases.PNG" style="width:80%">
+<img src="images/aqi_cases.PNG" style="width:80%">
 
 *AQI level and NYC COVID cases in 2020*
 
